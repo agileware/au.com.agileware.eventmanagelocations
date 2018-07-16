@@ -59,6 +59,8 @@
    {include file="CRM/common/formButtons.tpl" location="bottom"}
 </div>
 </div>
+</div>
+  </div>
 
 {include file="CRM/common/additionalBlocks.tpl"}
 <script type="text/javascript">

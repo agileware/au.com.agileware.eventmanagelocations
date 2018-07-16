@@ -7,7 +7,7 @@ require_once 'CRM/Core/Form.php';
  *
  * @see http://wiki.civicrm.org/confluence/display/CRMDOC43/QuickForm+Reference
  */
-class CRM_Reservedloc_Form_EditLocation extends CRM_Event_Form_ManageEvent_Location {
+class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEvent_Location {
   public function preProcess() {
     parent::preProcess();
 
@@ -59,7 +59,11 @@ class CRM_Reservedloc_Form_EditLocation extends CRM_Event_Form_ManageEvent_Locat
         $result = civicrm_api3($tmp[0], 'getsingle', array('id' => $value,));
 
         if($tmp[0] == 'address') {
-          CRM_Utils_System::setTitle(ts('Edit Location - %1', array(1 => CRM_Utils_Array::value('name', $result, ''))));
+          if (CRM_Utils_Array::value('name', $result, '') == '') {
+            CRM_Utils_System::setTitle(ts('Edit Location', array()));
+          } else {
+            CRM_Utils_System::setTitle(ts('Edit Location - %1', array(1 => CRM_Utils_Array::value('name', $result, ''))));
+          }
         }
 
         if( empty($result['is_error'])) {
@@ -111,7 +115,7 @@ class CRM_Reservedloc_Form_EditLocation extends CRM_Event_Form_ManageEvent_Locat
     $this->assign('action', $this->_action);
 
     // Disabled permission check as reserved locations are not implemented.
-       if (CRM_Core_Permission::check('edit locations')) {
+      if (CRM_Core_Permission::check('edit locations')) {
         $buttons = array(
           array(
             'type' => 'upload',
@@ -127,13 +131,10 @@ class CRM_Reservedloc_Form_EditLocation extends CRM_Event_Form_ManageEvent_Locat
         //$this->assign('message', 'Permission of editting enabled');
         $this->addButtons($buttons);
 
-
         // $this->addCheckBox('location_reserved', ts('Is location reserved?'),array());
-
       }
       else {
         //$this->assign('message', 'Permission of editting disabled');
-
       }
 
       if(isset($_SESSION["loc_srch_qfkey"])) {

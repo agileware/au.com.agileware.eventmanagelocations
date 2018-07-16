@@ -3,7 +3,7 @@
 /**
  * A custom contact search
  */
-class CRM_Reservedloc_Form_Search_SearchLocations extends CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface {
+class CRM_Eventmanagelocations_Form_Search_SearchLocations extends CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface {
   function __construct(&$formValues) {
     parent::__construct($formValues);
   }
@@ -65,10 +65,6 @@ class CRM_Reservedloc_Form_Search_SearchLocations extends CRM_Contact_Form_Searc
    */
   function summary() {
     return NULL;
-    // return array(
-    //   'summary' => 'This is a summary',
-    //   'total' => 50.0,
-    // );
   }
 
   /**
@@ -229,7 +225,7 @@ class CRM_Reservedloc_Form_Search_SearchLocations extends CRM_Contact_Form_Searc
    * @return string, template path (findable through Smarty template path)
    */
   function templateFile() {
-    return 'CRM/Reservedloc/Form/Search/SearchLocations.tpl';
+    return 'CRM/Eventmanagelocations/Form/Search/SearchLocations.tpl';
 
   }
 

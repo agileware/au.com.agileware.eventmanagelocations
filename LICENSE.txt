@@ -1,4 +1,4 @@
-Package: au.com.agileware.reservedloc
+Package: au.com.agileware.eventmanagelocations
 Copyright (C) 2016, Agileware Support <support@agileware.com.au>
 Licensed under the GNU Affero Public License 3.0 (below).
 

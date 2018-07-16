@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
-<extension key="au.com.agileware.reservedloc" type="module">
-  <file>reservedloc</file>
-  <name>Reserved locations</name>
+<extension key="au.com.agileware.eventmanagelocations" type="module">
+  <file>eventmanagelocations</file>
+  <name>Event manage locations</name>
   <description>Reservation of locations against location modification on Manage Event page. Addition of new pages for creating, searching, viewing and editing locations with permission control.</description>
   <license>AGPL-3.0</license>
   <maintainer>
@@ -9,7 +9,7 @@
     <email>support@agileware.com.au</email>
   </maintainer>
   <urls>
-    <url desc="Main Extension Page">https://bitbucket.org/agileware/au.com.agileware.reservedloc</url>
+    <url desc="Main Extension Page">https://bitbucket.org/agileware/au.com.agileware.eventmanagelocations</url>
     <url desc="Documentation"></url>
     <url desc="Support">https://agileware.com.au/contact</url>
     <url desc="Licensing">http://www.gnu.org/licenses/agpl-3.0.html</url>
@@ -22,6 +22,6 @@
   </compatibility>
   <comments></comments>
   <civix>
-    <namespace>CRM/Reservedloc</namespace>
+    <namespace>CRM/Eventmanagelocations</namespace>
   </civix>
 </extension>

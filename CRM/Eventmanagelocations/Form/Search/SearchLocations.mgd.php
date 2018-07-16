@@ -6,14 +6,14 @@
 return array (
   0 =>
   array (
-    'name' => 'CRM_Reservedloc_Form_Search_SearchLocations',
+    'name' => 'CRM_Eventmanagelocations_Form_Search_SearchLocations',
     'entity' => 'CustomSearch',
     'params' =>
     array (
       'version' => 3,
       'label' => 'Search Locations',
-      'description' => 'Search Locations (au.com.agileware.reservedloc)',
-      'class_name' => 'CRM_Reservedloc_Form_Search_SearchLocations',
+      'description' => 'Search Locations (au.com.agileware.eventmanagelocations)',
+      'class_name' => 'CRM_Eventmanagelocations_Form_Search_SearchLocations',
     ),
   ),
 );

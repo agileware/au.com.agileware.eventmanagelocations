@@ -2,7 +2,7 @@
 <menu>
   <item>
     <path>civicrm/EditLocation</path>
-    <page_callback>CRM_Reservedloc_Form_EditLocation</page_callback>
+    <page_callback>CRM_Eventmanagelocations_Form_EditLocation</page_callback>
     <title>EditLocation</title>
     <access_arguments>access CiviCRM</access_arguments>
   </item>

@@ -1,14 +1,14 @@
 <?php
 
-require_once 'reservedloc.civix.php';
+require_once 'eventmanagelocations.civix.php';
 
 /**
  * Implements hook_civicrm_config().
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_config
  */
-function reservedloc_civicrm_config(&$config) {
-  _reservedloc_civix_civicrm_config($config);
+function eventmanagelocations_civicrm_config(&$config) {
+  _eventmanagelocations_civix_civicrm_config($config);
 }
 
 /**
@@ -18,8 +18,8 @@ function reservedloc_civicrm_config(&$config) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_xmlMenu
  */
-function reservedloc_civicrm_xmlMenu(&$files) {
-  _reservedloc_civix_civicrm_xmlMenu($files);
+function eventmanagelocations_civicrm_xmlMenu(&$files) {
+  _eventmanagelocations_civix_civicrm_xmlMenu($files);
 }
 
 /**
@@ -27,8 +27,8 @@ function reservedloc_civicrm_xmlMenu(&$files) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_install
  */
-function reservedloc_civicrm_install() {
-  _reservedloc_civix_civicrm_install();
+function eventmanagelocations_civicrm_install() {
+  _eventmanagelocations_civix_civicrm_install();
 }
 
 /**
@@ -36,8 +36,8 @@ function reservedloc_civicrm_install() {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_uninstall
  */
-function reservedloc_civicrm_uninstall() {
-  _reservedloc_civix_civicrm_uninstall();
+function eventmanagelocations_civicrm_uninstall() {
+  _eventmanagelocations_civix_civicrm_uninstall();
 }
 
 /**
@@ -45,8 +45,8 @@ function reservedloc_civicrm_uninstall() {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_enable
  */
-function reservedloc_civicrm_enable() {
-  _reservedloc_civix_civicrm_enable();
+function eventmanagelocations_civicrm_enable() {
+  _eventmanagelocations_civix_civicrm_enable();
 }
 
 /**
@@ -54,8 +54,8 @@ function reservedloc_civicrm_enable() {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_disable
  */
-function reservedloc_civicrm_disable() {
-  _reservedloc_civix_civicrm_disable();
+function eventmanagelocations_civicrm_disable() {
+  _eventmanagelocations_civix_civicrm_disable();
 }
 
 /**
@@ -70,8 +70,8 @@ function reservedloc_civicrm_disable() {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_upgrade
  */
-function reservedloc_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
-  return _reservedloc_civix_civicrm_upgrade($op, $queue);
+function eventmanagelocations_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
+  return _eventmanagelocations_civix_civicrm_upgrade($op, $queue);
 }
 
 /**
@@ -82,8 +82,8 @@ function reservedloc_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_managed
  */
-function reservedloc_civicrm_managed(&$entities) {
-  _reservedloc_civix_civicrm_managed($entities);
+function eventmanagelocations_civicrm_managed(&$entities) {
+  _eventmanagelocations_civix_civicrm_managed($entities);
 }
 
 /**
@@ -97,8 +97,8 @@ function reservedloc_civicrm_managed(&$entities) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_caseTypes
  */
-function reservedloc_civicrm_caseTypes(&$caseTypes) {
-  _reservedloc_civix_civicrm_caseTypes($caseTypes);
+function eventmanagelocations_civicrm_caseTypes(&$caseTypes) {
+  _eventmanagelocations_civix_civicrm_caseTypes($caseTypes);
 }
 
 /**
@@ -111,8 +111,8 @@ function reservedloc_civicrm_caseTypes(&$caseTypes) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_caseTypes
  */
-function reservedloc_civicrm_angularModules(&$angularModules) {
-_reservedloc_civix_civicrm_angularModules($angularModules);
+function eventmanagelocations_civicrm_angularModules(&$angularModules) {
+_eventmanagelocations_civix_civicrm_angularModules($angularModules);
 }
 
 /**
@@ -120,8 +120,8 @@ _reservedloc_civix_civicrm_angularModules($angularModules);
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_alterSettingsFolders
  */
-function reservedloc_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
-  _reservedloc_civix_civicrm_alterSettingsFolders($metaDataFolders);
+function eventmanagelocations_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
+  _eventmanagelocations_civix_civicrm_alterSettingsFolders($metaDataFolders);
 }
 
 /**
@@ -133,7 +133,7 @@ function reservedloc_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_preProcess
  *
-function reservedloc_civicrm_preProcess($formName, &$form) {
+function eventmanagelocations_civicrm_preProcess($formName, &$form) {
 
 } // */
 
@@ -142,16 +142,16 @@ function reservedloc_civicrm_preProcess($formName, &$form) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_navigationMenu
  *
-function reservedloc_civicrm_navigationMenu(&$menu) {
-  _reservedloc_civix_insert_navigation_menu($menu, NULL, array(
-    'label' => ts('The Page', array('domain' => 'au.com.agileware.reservedloc')),
+function eventmanagelocations_civicrm_navigationMenu(&$menu) {
+  _eventmanagelocations_civix_insert_navigation_menu($menu, NULL, array(
+    'label' => ts('The Page', array('domain' => 'au.com.agileware.eventmanagelocations')),
     'name' => 'the_page',
     'url' => 'civicrm/the-page',
     'permission' => 'access CiviReport,access CiviContribute',
     'operator' => 'OR',
     'separator' => 0,
   ));
-  _reservedloc_civix_navigationMenu($menu);
+  _eventmanagelocations_civix_navigationMenu($menu);
 } // */
 /*
 */
@@ -161,7 +161,7 @@ function reservedloc_civicrm_navigationMenu(&$menu) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_permission
  */
-function reservedloc_civicrm_permission(&$permissions) {
+function eventmanagelocations_civicrm_permission(&$permissions) {
   $permissions['edit locations'] = ts('Locations: Edit locations');
 }
 
@@ -172,7 +172,7 @@ function reservedloc_civicrm_permission(&$permissions) {
  *
  * Force the location option to always be "Create new location"
  */
-function reservedloc_civicrm_buildForm($formName, &$form) {
+function eventmanagelocations_civicrm_buildForm($formName, &$form) {
   if ($formName == 'CRM_Event_Form_ManageEvent_Location') {
     $defaults = array();
     if ($form->elementExists('location_option')) {
