@@ -48,8 +48,21 @@ Form on this page would be pre-filled with exisiting location details.
 Unlike **Event location** page, clicking on save from this form **will not** create new address.
 
 
-##Support and questions
+About the Authors
+------
 
-This CiviCRM extension was developed by Agileware, https://agileware.com.au
+This CiviCRM extension was developed by the team at [Agileware](https://agileware.com.au).
 
-Agileware can be contracted for CiviCRM development and support services. Email: [sales@agileware.com.au](mailto:sales@agileware.com.au)
+[Agileware](https://agileware.com.au) provide a range of CiviCRM services including:
+
+  * CiviCRM migration
+  * CiviCRM integration
+  * CiviCRM extension development
+  * CiviCRM support
+  * CiviCRM hosting
+  * CiviCRM remote training services
+
+Support your Australian [CiviCRM](https://civicrm.org) developers, [contact Agileware](https://agileware.com.au/contact) today!
+
+
+![Agileware](logo/agileware-logo.png)
