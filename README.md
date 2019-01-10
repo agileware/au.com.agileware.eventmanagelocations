@@ -3,11 +3,11 @@ Event manage locations
 
 This extension prevents reusing the location in an event. It ensures that when a location is changed in an event, a new location is created. It is done by removing option to **Use existing location** on **Event Location** Tab.
 
-##Manage Locations
+## Manage Locations
 
 This extensions also adds functionality to **manage exisiting locations**. User can search/insert/edit a location.
 
-###1. Search Locations 
+### 1. Search Locations 
 A new custom search has been added by this extension. Go to following URL to find it,
 
 ```
