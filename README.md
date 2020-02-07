@@ -1,7 +1,8 @@
 Event manage locations
 =
 
-This extension prevents reusing the location in an event. It ensures that when a location is changed in an event, a new location is created. It is done by removing option to **Use existing location** on **Event Location** Tab.
+CiviCRM extension to prevent re-using locations in CiviCRM Events. Ensures that when a location is changed for an Event, a new location is also created - each location is unique.
+This extension also removes the option to **Use existing location** on the **Event Location** tab for CiviCRM Events.
 
 ## Manage Locations
 
