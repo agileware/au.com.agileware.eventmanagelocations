@@ -189,6 +189,18 @@ function eventmanagelocations_civicrm_buildForm($formName, &$form) {
       $form->removeElement('loc_event_id');
     }
 
+    // Phones and Emails are passed through to the Loc Block create function
+    // with their original ids unless we unset them here. If the id is passed through
+    // the Loc block create function uses that instead of the newly created id so a db constraint happens
+    foreach (['email', 'phone'] as $entity) {
+        if (!empty($form->_values[$entity])) {
+            foreach ($form->_values[$entity] as $key => $data) {
+                    unset($form->_values[$entity][$key]['id']);
+            }
+            $defaults['email'] = $form->_values['email'];
+        }
+    }
+
     // Ensure locUsed is 0, otherwise we get confusing output.
     $form->assign('locUsed', 0);
 
