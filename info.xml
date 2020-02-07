@@ -2,23 +2,23 @@
 <extension key="au.com.agileware.eventmanagelocations" type="module">
   <file>eventmanagelocations</file>
   <name>Event manage locations</name>
-  <description>Reservation of locations against location modification on Manage Event page. Addition of new pages for creating, searching, viewing and editing locations with permission control.</description>
+  <description>CiviCRM extension to prevent re-use of locations in a CiviCRM Events. Ensures that when a location is changed for an Event, a new location is also created.</description>
   <license>AGPL-3.0</license>
   <maintainer>
     <author>Agileware Support</author>
     <email>support@agileware.com.au</email>
   </maintainer>
   <urls>
-    <url desc="Main Extension Page">https://bitbucket.org/agileware/au.com.agileware.eventmanagelocations</url>
+    <url desc="Main Extension Page">https://github.com/agileware/au.com.agileware.eventmanagelocations</url>
     <url desc="Documentation"></url>
     <url desc="Support">https://agileware.com.au/contact</url>
     <url desc="Licensing">http://www.gnu.org/licenses/agpl-3.0.html</url>
   </urls>
   <releaseDate></releaseDate>
-  <version>1.0.0</version>
-  <develStage>alpha</develStage>
+  <version>1.0.1</version>
+  <develStage>beta</develStage>
   <compatibility>
-    <ver>4.6</ver>
+    <ver>5.0</ver>
   </compatibility>
   <comments></comments>
   <civix>
