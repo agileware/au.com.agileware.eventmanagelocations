@@ -4,9 +4,6 @@
  * A custom contact search
  */
 class CRM_Eventmanagelocations_Form_Search_SearchLocations extends CRM_Contact_Form_Search_Custom_Base implements CRM_Contact_Form_Search_Interface {
-  function __construct(&$formValues) {
-    parent::__construct($formValues);
-  }
 
   /**
    * Prepare a set of search fields
@@ -14,7 +11,9 @@ class CRM_Eventmanagelocations_Form_Search_SearchLocations extends CRM_Contact_F
    * @param CRM_Core_Form $form modifiable
    * @return void
    */
-  function buildForm(&$form) {
+  public function buildForm(&$form) {
+    $config = CRM_Core_Config::singleton();
+    $countryDefault = $config->defaultContactCountry;
 
     $title = ts('Locations Listing');
 
@@ -22,12 +21,13 @@ class CRM_Eventmanagelocations_Form_Search_SearchLocations extends CRM_Contact_F
 
     $form->assign('loc_srch_title', $title);
 
-    $form->add('text','address_name',ts('Address Name'),TRUE);
-    $form->add('text','street_address',ts('Street Address'),TRUE);
-    $form->add('text','city',ts('City'),TRUE);
-    $country = array('' => ts('- any country -')) + CRM_Core_PseudoConstant::country();
-    $form->add('select', 'country', ts('Country') , $country, FALSE, array('class' => 'crm-select2'));
-    $element = $form->addChainSelect('state_province');
+    $form->add('text','address_name',ts('Address Name'));
+    $form->add('text','street_address',ts('Street Address'));
+    $form->add('text','city',ts('City'));
+
+    $form->addChainSelect('state_province_id');
+    $country = ['' => ts('- select -')] + CRM_Core_PseudoConstant::country();
+    $form->add('select', 'country_id', ts('Country'), $country, TRUE, ['class' => 'crm-select2']);
 
     // Optionally define default search values
     $form->setDefaults(
@@ -35,14 +35,14 @@ class CRM_Eventmanagelocations_Form_Search_SearchLocations extends CRM_Contact_F
       'address_name' => '',
       'street_address' => '',
       'city' => '',
-      'country' => NULL,
+      'country_id' => $countryDefault,
     ));
 
     /**
      * if you are using the standard template, this array tells the template what elements
      * are part of the search criteria
      */
-    $form->assign('elements', array('address_name','street_address','city','country', 'state_province',));
+    $form->assign('elements', array('address_name','street_address','city','country_id', 'state_province_id',));
 
     if(isset($_REQUEST['csid'])) {
       if(isset($_SESSION["loc_srch_qfkey"])) {
@@ -63,7 +63,7 @@ class CRM_Eventmanagelocations_Form_Search_SearchLocations extends CRM_Contact_F
    *  - summary: string
    *  - total: numeric
    */
-  function summary() {
+  public function summary() {
     return NULL;
   }
 
@@ -72,7 +72,7 @@ class CRM_Eventmanagelocations_Form_Search_SearchLocations extends CRM_Contact_F
    *
    * @return array, keys are printable column headers and values are SQL column names
    */
-  function &columns() {
+  public function &columns() {
     if(isset($_REQUEST['qfKey']) ) {
       if(isset($_SESSION["loc_srch_csid"])) {
         unset($_SESSION["loc_srch_csid"]);
@@ -101,7 +101,7 @@ class CRM_Eventmanagelocations_Form_Search_SearchLocations extends CRM_Contact_F
    * @param bool $justIDs
    * @return string, sql
    */
-  function all($offset = 0, $rowcount = 0, $sort = NULL, $includeContactIDs = FALSE, $justIDs = FALSE) {
+  public function all($offset = 0, $rowcount = 0, $sort = NULL, $includeContactIDs = FALSE, $justIDs = FALSE) {
     // delegate to $this->sql(), $this->select(), $this->from(), $this->where(), etc.
     return $this->sql($this->select(), $offset, $rowcount, $sort, $includeContactIDs, NULL);
   }
@@ -111,7 +111,7 @@ class CRM_Eventmanagelocations_Form_Search_SearchLocations extends CRM_Contact_F
    *
    * @return string, sql fragment with SELECT arguments
    */
-  function select() {
+  public function select() {
     return "
     loc_block.id as location_block_id,
     address.city as city,
@@ -129,7 +129,7 @@ class CRM_Eventmanagelocations_Form_Search_SearchLocations extends CRM_Contact_F
    *
    * @return string, sql fragment with FROM and JOIN clauses
    */
-  function from() {
+  public function from() {
     return "
     from civicrm_loc_block loc_block
     left join civicrm_address address on (loc_block.address_id = address.id )
@@ -146,17 +146,14 @@ class CRM_Eventmanagelocations_Form_Search_SearchLocations extends CRM_Contact_F
    * @param bool $includeContactIDs
    * @return string, sql fragment with conditional expressions
    */
-  function where($includeContactIDs = FALSE) {
+  public function where($includeContactIDs = FALSE) {
     $params = array();
     $where = "";
     $count  = 1;
     $clause = array();
     $form_value = null;
     //address_name
-    $form_value = CRM_Utils_Array::value(
-      'address_name',
-      $this->_formValues
-    );
+    $form_value = $this->_formValues['address_name'] ?? NULL;
     if ($form_value != NULL) {
       if (strpos($form_value, '%') === FALSE) {
         $form_value = "%{$form_value}%";
@@ -166,10 +163,7 @@ class CRM_Eventmanagelocations_Form_Search_SearchLocations extends CRM_Contact_F
       $count++;
     }
     //street_address
-    $form_value   = CRM_Utils_Array::value(
-    'street_address',
-      $this->_formValues
-    );
+    $form_value   = $this->_formValues['street_address'] ?? NULL;
     if ($form_value != NULL) {
       if (strpos($form_value, '%') === FALSE) {
         $form_value = "%{$form_value}%";
@@ -179,10 +173,7 @@ class CRM_Eventmanagelocations_Form_Search_SearchLocations extends CRM_Contact_F
       $count++;
     }
     //city
-    $form_value = CRM_Utils_Array::value(
-      'city',
-      $this->_formValues
-    );
+    $form_value = $this->_formValues['city'] ?? NULL;
     if ($form_value != NULL) {
       if (strpos($form_value, '%') === FALSE) {
         $form_value = "%{$form_value}%";
@@ -192,19 +183,13 @@ class CRM_Eventmanagelocations_Form_Search_SearchLocations extends CRM_Contact_F
       $count++;
     }
     //country
-    $form_value = CRM_Utils_Array::value(
-      'country',
-      $this->_formValues
-    );
+    $form_value = $this->_formValues['country_id'] ?? NULL;
     if ($form_value) {
       $params[$count] = array($form_value, 'Integer');
       $clause[] = "country.id = %{$count}";
       $count++;
     }
-    $form_value = CRM_Utils_Array::value(
-      'state_province',
-      $this->_formValues
-    );
+    $form_value = $this->_formValues['state_province_id'] ?? NULL;
     if ($form_value) {
       $params[$count] = array($form_value, 'Integer');
       $clause[] = "state.id = %{$count}";
@@ -224,14 +209,21 @@ class CRM_Eventmanagelocations_Form_Search_SearchLocations extends CRM_Contact_F
    *
    * @return string, template path (findable through Smarty template path)
    */
-  function templateFile() {
+  public function templateFile() {
     return 'CRM/Eventmanagelocations/Form/Search/SearchLocations.tpl';
 
   }
 
-  public function validateUserSQL(&$sql, $onlyWhere = FALSE) {
-    return true;
+  public function validateUserSQL($sql, $onlyWhere = FALSE): void {
   }
 
+  /**
+   * Fill the prevNextCache with the found contacts
+   *
+   * @return bool TRUE if the search was able to process it.
+   */
+  public function fillPrevNextCache($cacheKey, $start, $end, $sort): bool {
+    return TRUE;
+  }
 
 }

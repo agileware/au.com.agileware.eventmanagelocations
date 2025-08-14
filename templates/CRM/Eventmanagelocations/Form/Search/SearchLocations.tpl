@@ -43,12 +43,13 @@ CRM.$(function($) {
    templateFile() function.*}
 
 <div class="crm-block crm-form-block crm-contact-custom-search-form-block">
-<div class="crm-accordion-wrapper crm-custom_search_form-accordion {if $rows}collapsed{/if}">
+  <details class="crm-accordion-light crm_location_search-accordion" {if $rows}{else}open{/if}>
     <a name="new_location"  href="{crmURL p="civicrm/EditLocation" h=0}" class="crm-form-submit" style="float: right; display: inline-block;" target="_self">Create a new location</a>
-    <div class="crm-accordion-header crm-master-accordion-header" style="display: inline-block;">
+    <summary>
       <p>{ts}Find Locations{/ts}</p>
-    </div><!-- /.crm-accordion-header -->
+    </summary><!-- /.crm-accordion-header -->
     <div class="crm-accordion-body">
+      <div id="searchForm" class="crm-block crm-form-block crm-contact-custom-search-location-search-fomr-block">
         <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="top"}</div>
         <table class="form-layout-compressed">
             {* Loop through all defined search criteria fields (defined in the buildForm() function). *}
@@ -66,15 +67,18 @@ CRM.$(function($) {
             {/foreach}
         </table>
         <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="bottom"}</div>
-    </div><!-- /.crm-accordion-body -->
-</div><!-- /.crm-accordion-wrapper -->
+      </div>
+    </div>
+</details>
 </div><!-- /.crm-form-block -->
 
 
 {if $rowsEmpty || $rows}
 <div class="crm-content-block">
 {if $rowsEmpty}
+  <div class="crm-results-block crm-results-block-empty">
     {include file="CRM/Contact/Form/Search/Custom/EmptyResults.tpl"}
+  </div>
 {/if}
 
 {if $summary}

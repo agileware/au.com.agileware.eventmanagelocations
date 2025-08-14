@@ -1,6 +1,7 @@
 <?php
 
 require_once 'eventmanagelocations.civix.php';
+use CRM_Eventmanagelocations_ExtensionUtil as E;
 
 /**
  * Implements hook_civicrm_config().
@@ -66,7 +67,9 @@ function eventmanagelocations_civicrm_navigationMenu(&$menu) {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_permission
  */
 function eventmanagelocations_civicrm_permission(&$permissions) {
-  $permissions['edit locations'] = ts('Locations: Edit locations');
+  $permissions['edit locations'] = [
+    'label' => E::ts('Locations: Edit locations'),
+  ];
 }
 
 /**
@@ -97,12 +100,14 @@ function eventmanagelocations_civicrm_buildForm($formName, &$form) {
     // with their original ids unless we unset them here. If the id is passed through
     // the Loc block create function uses that instead of the newly created id so a db constraint happens
     foreach (['email', 'phone'] as $entity) {
-        if (!empty($form->_values[$entity])) {
-            foreach ($form->_values[$entity] as $key => $data) {
-                    unset($form->_values[$entity][$key]['id']);
-            }
-            $defaults['email'] = $form->_values['email'];
+      if (!empty($form->_values[$entity])) {
+        foreach ($form->_values[$entity] as $key => $data) {
+          if (isset($form->_values[$entity][$key]['id'])) {
+            unset($form->_values[$entity][$key]['id']);
+          }
         }
+        $defaults['email'] = $form->_values['email'];
+      }
     }
 
     // Ensure locUsed is 0, otherwise we get confusing output.
