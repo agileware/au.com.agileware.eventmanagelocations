@@ -23,11 +23,11 @@
   <comments/>
   <civix>
     <namespace>CRM/Eventmanagelocations</namespace>
-    <format>25.10.1</format>
+    <format>25.10.2</format>
   </civix>
   <mixins>
     <mixin>menu-xml@1.0.0</mixin>
-    <mixin>mgd-php@1.0.0</mixin>
+    <mixin>mgd-php@2.0.0</mixin>
     <mixin>smarty-v2@1.0.3</mixin>
   </mixins>
   <classloader>
