@@ -78,42 +78,78 @@ function eventmanagelocations_civicrm_permission(&$permissions) {
  */
 function eventmanagelocations_civicrm_buildForm($formName, &$form) {
   if ($formName == 'CRM_Event_Form_ManageEvent_Location') {
-    $defaults = array();
+    // Remove the "Copy From Event" selector if it exists
+    if ($form->elementExists('loc_event_id')) {
+      $form->removeElement('loc_event_id');
+    }
+    // Remove the legacy radio buttons if they exist
     if ($form->elementExists('location_option')) {
-      // Reset the location option to create a new LocBlock every time.
       $form->removeElement('location_option');
     }
 
-    $form->addElement('hidden', 'location_option');
-    $form->getElement('location_option')->setValue(1);
-    $defaults['location_option'] = 1;
+    // Copy data from the old location
+    $defaults = [];
+    $entities = ['email', 'phone', 'address'];
 
-    if($form->elementExists('loc_event_id')) {
-      // Remove the location selector.
-      $form->removeElement('loc_event_id');
-    }
+    foreach ($entities as $entity) {
+        $sourceData = [];
 
-    // Phones and Emails are passed through to the Loc Block create function
-    // with their original ids unless we unset them here. If the id is passed through
-    // the Loc block create function uses that instead of the newly created id so a db constraint happens
-    foreach (['email', 'phone'] as $entity) {
-        if (!empty($form->_values[$entity])) {
-            foreach ($form->_values[$entity] as $key => $data) {
-                    unset($form->_values[$entity][$key]['id']);
+        // Try _values first
+        if (!empty($form->_values[$entity]) && is_array($form->_values[$entity])) {
+            $sourceData = $form->_values[$entity];
+        } 
+        // Fallback to _defaultValues
+        elseif (!empty($form->_defaultValues[$entity]) && is_array($form->_defaultValues[$entity])) {
+            $sourceData = $form->_defaultValues[$entity];
+        }
+
+        if (!empty($sourceData)) {
+            $cleanData = [];
+            foreach ($sourceData as $key => $data) {
+                // Ensure we have an array before accessing keys
+                if (is_array($data)) {
+                    // CRITICAL: Unset the ID. This turns "Update Email #35" into "Create New Email"
+                    if (isset($data['id'])) {
+                        unset($data['id']); 
+                    }
+                    // Also unset loc_block_id inside the entities if present
+                    if (isset($data['loc_block_id'])) {
+                        unset($data['loc_block_id']);
+                    }
+                    $cleanData[$key] = $data;
+                }
             }
-            $defaults['email'] = $form->_values['email'];
+            if (!empty($cleanData)) {
+                $defaults[$entity] = $cleanData;
+            }
         }
     }
 
-    // Ensure locUsed is 0, otherwise we get confusing output.
-    $form->assign('locUsed', 0);
+    // Force a new location to be saved
 
-    // Actually, remove the entire block.
-    $form->assign('locEvents', FALSE);
-
-    // Overwrite the applicable (location_option) default values.
-    if(!empty($default)) {
-      $form->setDefaults($defaults);
+    // Unset the loc_block_id from _values.
+    // This tells CiviCRM: "I am not attached to any existing location block."
+    if (isset($form->_values['loc_block_id'])) {
+        unset($form->_values['loc_block_id']);
     }
+
+    if (isset($form->locationBlock)) {
+        $form->locationBlock = NULL;
+    }
+
+    // Remove the hidden field that stores the ID (if it exists)
+    // This prevents the ID from being POSTed back to the server.
+    if ($form->elementExists('loc_block_id')) {
+        $form->removeElement('loc_block_id');
+    }
+
+    // Apply Defaults
+    if (!empty($defaults)) {
+        $form->setDefaults($defaults);
+    }
+
+    // Hide the location selector wrapper
+    $form->assign('locUsed', 0);
+    $form->assign('locEvents', FALSE);
   }
 }
