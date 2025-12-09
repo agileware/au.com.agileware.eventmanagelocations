@@ -30,6 +30,7 @@ return [
             'Address_LocBlock_address_id_01.email_2_id.email',
             'Address_LocBlock_address_id_01.phone_id.phone',
             'Address_LocBlock_address_id_01.phone_2_id.phone',
+            'Address_LocBlock_address_id_01_LocBlock_Event_loc_block_id_01.title',
           ],
           'orderBy' => [],
           'where' => [],
@@ -42,6 +43,15 @@ return [
                 'id',
                 '=',
                 'Address_LocBlock_address_id_01.address_id',
+              ],
+            ],
+            [
+              'Event AS Address_LocBlock_address_id_01_LocBlock_Event_loc_block_id_01',
+              'INNER',
+              [
+                'Address_LocBlock_address_id_01.id',
+                '=',
+                'Address_LocBlock_address_id_01_LocBlock_Event_loc_block_id_01.loc_block_id',
               ],
             ],
           ],
@@ -64,7 +74,7 @@ return [
         'saved_search_id.name' => 'Manage_Event_Locations',
         'type' => 'table',
         'settings' => [
-          'description' => E::ts(NULL),
+          'description' => E::ts(''),
           'sort' => [],
           'limit' => 50,
           'pager' => [],
