@@ -1,7 +1,5 @@
 <?php
 
-require_once 'CRM/Core/Form.php';
-
 /**
  * Form controller class
  *
@@ -59,10 +57,10 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
         $result = civicrm_api3($tmp[0], 'getsingle', array('id' => $value,));
 
         if($tmp[0] == 'address') {
-          if (CRM_Utils_Array::value('name', $result, '') == '') {
+          if (($result['name'] ?? '') == '') {
             CRM_Utils_System::setTitle(ts('Edit Location', array()));
           } else {
-            CRM_Utils_System::setTitle(ts('Edit Location - %1', array(1 => CRM_Utils_Array::value('name', $result, ''))));
+            CRM_Utils_System::setTitle(ts('Edit Location - %1', array(1 => $result['name'] ?? ''))));
           }
         }
 
@@ -70,7 +68,7 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
           unset($result['is_error']);
         }
         else {
-          CRM_Core_Error::fatal($result['error_message']);
+          CRM_Core_Error::statusBounce($result['error_message']);
         }
         $this->_values[strtolower($tmp[0])][$tmp[1]] = $result;
       }
@@ -91,7 +89,7 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
     }
 
     if (!CRM_Core_Permission::check('edit locations')) {
-      //$this->assign('message', 'No permission to edit');
+      //$thisloc_event_id->assign('message', 'No permission to edit');
       foreach (array_keys($this->_elements) as $key) {
         $this->_elements[$key]->freeze();
       }
@@ -101,15 +99,12 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
 
   public function buildQuickForm() {
     //load form for child blocks
-    if ($this->_addBlockName) {
-      $className = "CRM_Contact_Form_Edit_{$this->_addBlockName}";
-      return $className::buildQuickForm($this);
-    }
-
+    CRM_Contact_Form_Edit_Address::buildQuickForm($this, 1);
+    $this->addEmailBlockNonContactFields(1);
+    $this->addEmailBlockNonContactFields(2);
+    $this->addPhoneBlockFields(1);
+    $this->addPhoneBlockFields(2);
     $this->applyFilter('__ALL__', 'trim');
-
-    //build location blocks.
-    CRM_Contact_Form_Location::buildQuickForm($this);
 
     //fix for CRM-1971
     $this->assign('action', $this->_action);
@@ -147,7 +142,6 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
 
   public function postProcess() {
     $params = $this->exportValues();
-
     if( !empty($this->_values)) {
       $custom_fields_array = array();
       foreach ($this->_values as $blockName => $block_value) {
@@ -164,7 +158,7 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
             $result = civicrm_api3($blockName, 'create', $params[$blockName][$key] + array('contact_id'=>'','location_type_id'=>''));
 
             if( !empty($result['is_error'])) {
-              CRM_Core_Error::fatal($result['error_message']);
+              CRM_Core_Error::statusBounce($result['error_message']);
             }
 
             //update custom fields on each block, if any
@@ -173,7 +167,7 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
               $result = civicrm_api3('CustomValue', 'create', $query_array);
 
               if( !empty($result['is_error'])) {
-                CRM_Core_Error::fatal($result['error_message']);
+                CRM_Core_Error::statusBounce($result['error_message']);
               }
             }
         }
