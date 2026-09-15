@@ -118,6 +118,16 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
     //email/phone; use those when available and fall back to the older,
     //still-functional-but-deprecated calls on CiviCRM versions that predate
     //them.
+    //
+    //CRM/Contact/Form/Edit/Address|Email|Phone.tpl all key off a $blockId
+    //(and $addBlock) smarty variable to know which block instance they are
+    //rendering, which CRM_Contact_Form_Location::buildQuickForm() used to
+    //assign for us. Assign it ourselves now that we call the block builders
+    //directly - this extension's EditLocation.tpl only ever includes each
+    //template once, so a single blockId of 1 covers all three.
+    $this->assign('addBlock', FALSE);
+    $this->assign('blockId', 1);
+
     CRM_Contact_Form_Edit_Address::buildQuickForm($this, 1);
     if (method_exists($this, 'addEmailBlockNonContactFields')) {
       $this->addEmailBlockNonContactFields(1);
