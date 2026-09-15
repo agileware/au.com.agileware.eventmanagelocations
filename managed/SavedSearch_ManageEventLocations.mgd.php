@@ -3,15 +3,15 @@ use CRM_Eventmanagelocations_ExtensionUtil as E;
 
 return [
   [
-    'name' => 'SavedSearch_EventLocations',
+    'name' => 'SavedSearch_ManageEventLocations',
     'entity' => 'SavedSearch',
     'cleanup' => 'unused',
     'update' => 'unmodified',
     'params' => [
       'version' => 4,
       'values' => [
-        'name' => 'EventLocations',
-        'label' => E::ts('Search Locations'),
+        'name' => 'ManageEventLocations',
+        'label' => E::ts('Manage Event Locations'),
         'api_entity' => 'LocBlock',
         'api_params' => [
           'version' => 4,
@@ -25,10 +25,23 @@ return [
           ],
           'orderBy' => [],
           'where' => [],
-          'groupBy' => [],
-          'join' => [],
+          'groupBy' => [
+            'id',
+          ],
+          'join' => [
+            [
+              'Event AS LocBlock_Event_loc_block_id_01',
+              'INNER',
+              [
+                'id',
+                '=',
+                'LocBlock_Event_loc_block_id_01.loc_block_id',
+              ],
+            ],
+          ],
           'having' => [],
         ],
+        'description' => E::ts('Only shows locations that are attached to at least one event.'),
       ],
       'match' => [
         'name',
@@ -36,19 +49,19 @@ return [
     ],
   ],
   [
-    'name' => 'SavedSearch_EventLocations_SearchDisplay_EventLocations_Table_1',
+    'name' => 'SavedSearch_ManageEventLocations_SearchDisplay_ManageEventLocations_Table_1',
     'entity' => 'SearchDisplay',
     'cleanup' => 'unused',
     'update' => 'unmodified',
     'params' => [
       'version' => 4,
       'values' => [
-        'name' => 'EventLocations_Table_1',
-        'label' => E::ts('Search Locations'),
-        'saved_search_id.name' => 'EventLocations',
+        'name' => 'ManageEventLocations_Table_1',
+        'label' => E::ts('Manage Event Locations'),
+        'saved_search_id.name' => 'ManageEventLocations',
         'type' => 'table',
         'settings' => [
-          'description' => NULL,
+          'description' => E::ts('Editing an address here updates it everywhere it is used. To give an event a new, independent location instead, use "Create a New Location" or the event\'s own Location tab.'),
           'sort' => [
             ['address_id.name', 'ASC'],
           ],
@@ -62,6 +75,7 @@ return [
               'dataType' => 'String',
               'label' => E::ts('Address Name'),
               'sortable' => TRUE,
+              'editable' => TRUE,
             ],
             [
               'type' => 'field',
@@ -69,6 +83,7 @@ return [
               'dataType' => 'String',
               'label' => E::ts('Street Address'),
               'sortable' => TRUE,
+              'editable' => TRUE,
             ],
             [
               'type' => 'field',
@@ -76,6 +91,7 @@ return [
               'dataType' => 'String',
               'label' => E::ts('City'),
               'sortable' => TRUE,
+              'editable' => TRUE,
             ],
             [
               'type' => 'field',
@@ -83,6 +99,7 @@ return [
               'dataType' => 'String',
               'label' => E::ts('Country'),
               'sortable' => TRUE,
+              'editable' => TRUE,
             ],
             [
               'type' => 'field',
@@ -90,12 +107,13 @@ return [
               'dataType' => 'String',
               'label' => E::ts('State/Province'),
               'sortable' => TRUE,
+              'editable' => TRUE,
             ],
             [
               'text' => '',
               'style' => 'default',
               'size' => 'btn-xs',
-              'icon' => 'fa-pencil',
+              'icon' => 'fa-bars',
               'links' => [
                 [
                   'path' => 'civicrm/EditLocation?bid=[id]',
@@ -107,6 +125,30 @@ return [
                   'text' => E::ts('Edit Location'),
                   'style' => 'default',
                   'task' => '',
+                  'conditions' => [],
+                ],
+                [
+                  'path' => '',
+                  'entity' => 'Address',
+                  'action' => '',
+                  'join' => 'address_id',
+                  'target' => 'crm-popup',
+                  'icon' => 'fa-map-marker',
+                  'text' => E::ts('Update Address'),
+                  'style' => 'default',
+                  'task' => 'update',
+                  'conditions' => [],
+                ],
+                [
+                  'path' => '',
+                  'entity' => 'Address',
+                  'action' => '',
+                  'join' => 'address_id',
+                  'target' => 'crm-popup',
+                  'icon' => 'fa-trash',
+                  'text' => E::ts('Delete Address'),
+                  'style' => 'danger',
+                  'task' => 'delete',
                   'conditions' => [],
                 ],
               ],

@@ -139,7 +139,7 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
         //$this->assign('message', 'Permission of editting disabled');
       }
 
-      $this->assign('loc_srch_url', CRM_Utils_System::url('civicrm/search/locations', NULL, TRUE));
+      $this->assign('loc_srch_url', CRM_Utils_System::url('civicrm/manage-event-locations', NULL, TRUE));
   }
 
   public function postProcess() {

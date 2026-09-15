@@ -3,24 +3,25 @@ use CRM_Eventmanagelocations_ExtensionUtil as E;
 
 return [
   [
-    'name' => 'Navigation_afsearchEventLocations',
+    'name' => 'Navigation_afsearchManageEventLocations',
     'entity' => 'Navigation',
     'cleanup' => 'always',
     'update' => 'unmodified',
     'params' => [
       'version' => 4,
       'values' => [
-        'label' => E::ts('Search Locations'),
-        'name' => 'afsearchEventLocations',
-        'url' => 'civicrm/search/locations',
-        'icon' => 'crm-i fa-map-marker',
+        'label' => E::ts('Manage Event Locations'),
+        'name' => 'afsearchManageEventLocations',
+        'url' => 'civicrm/manage-event-locations',
+        'icon' => 'crm-i fa-list-alt',
         'permission' => [
+          'access CiviEvent',
           'access CiviCRM',
         ],
         'permission_operator' => 'AND',
-        'parent_id.name' => 'Search',
+        'parent_id.name' => 'Events',
         'is_active' => TRUE,
-        'weight' => 20,
+        'weight' => 12,
       ],
       'match' => [
         'name',
