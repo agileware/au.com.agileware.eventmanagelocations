@@ -106,12 +106,28 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
     //
     //CRM_Contact_Form_Location::buildQuickForm() was deprecated in CiviCRM
     //5.66 and removed in later versions (civicrm/civicrm-core#30813), so the
-    //address/email/phone blocks are built directly here instead.
+    //address/email/phone blocks are built directly here instead. Newer
+    //CiviCRM versions give the parent class non-deprecated trait methods for
+    //email/phone; use those when available and fall back to the older,
+    //still-functional-but-deprecated calls on CiviCRM versions that predate
+    //them.
     CRM_Contact_Form_Edit_Address::buildQuickForm($this, 1);
-    CRM_Contact_Form_Edit_Email::buildQuickForm($this, 1);
-    CRM_Contact_Form_Edit_Email::buildQuickForm($this, 2);
-    CRM_Contact_Form_Edit_Phone::buildQuickForm($this, 1);
-    CRM_Contact_Form_Edit_Phone::buildQuickForm($this, 2);
+    if (method_exists($this, 'addEmailBlockNonContactFields')) {
+      $this->addEmailBlockNonContactFields(1);
+      $this->addEmailBlockNonContactFields(2);
+    }
+    else {
+      CRM_Contact_Form_Edit_Email::buildQuickForm($this, 1);
+      CRM_Contact_Form_Edit_Email::buildQuickForm($this, 2);
+    }
+    if (method_exists($this, 'addPhoneBlockFields')) {
+      $this->addPhoneBlockFields(1);
+      $this->addPhoneBlockFields(2);
+    }
+    else {
+      CRM_Contact_Form_Edit_Phone::buildQuickForm($this, 1);
+      CRM_Contact_Form_Edit_Phone::buildQuickForm($this, 2);
+    }
 
     //fix for CRM-1971
     $this->assign('action', $this->_action);
