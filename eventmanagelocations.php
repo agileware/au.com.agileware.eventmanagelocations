@@ -112,7 +112,7 @@ function eventmanagelocations_civicrm_buildForm($formName, &$form) {
     $form->assign('locEvents', FALSE);
 
     // Overwrite the applicable (location_option) default values.
-    if(!empty($default)) {
+    if(!empty($defaults)) {
       $form->setDefaults($defaults);
     }
   }
