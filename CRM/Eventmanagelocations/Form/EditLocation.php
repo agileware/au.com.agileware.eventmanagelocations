@@ -139,12 +139,7 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
         //$this->assign('message', 'Permission of editting disabled');
       }
 
-      if(isset($_SESSION["loc_srch_qfkey"])) {
-        $this->assign('loc_srch_url', CRM_Utils_System::url('civicrm/contact/search/custom','qfKey='.$_SESSION["loc_srch_qfkey"],true));
-      }
-      else if(isset($_SESSION["loc_srch_csid"])) {
-        $this->assign('loc_srch_url', CRM_Utils_System::url('civicrm/contact/search/custom','csid='.$_SESSION["loc_srch_csid"].'&reset=1',true));
-      }
+      $this->assign('loc_srch_url', CRM_Utils_System::url('civicrm/search/locations', NULL, TRUE));
   }
 
   public function postProcess() {
