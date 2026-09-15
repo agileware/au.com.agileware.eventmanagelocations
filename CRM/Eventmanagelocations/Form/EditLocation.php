@@ -2,6 +2,9 @@
 
 require_once 'CRM/Core/Form.php';
 
+use Civi\Api4\Email;
+use Civi\Api4\Phone;
+
 /**
  * Form controller class
  *
@@ -175,33 +178,88 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
     $params = $this->exportValues();
 
     if( !empty($this->_values)) {
-      $custom_fields_array = array();
-      foreach ($this->_values as $blockName => $block_value) {
-        foreach ($block_value as $key => $value) {
-            $custom_fields_array = array();
-            $id = $value['id'];
+      $bid = $_SESSION['loc_edt_bid'];
+      $locBlockUpdates = array();
 
-            $params[$blockName][$key]['id'] =  $id;
+      //iterate over what was actually submitted, not just the blocks that
+      //already existed on this location - otherwise adding an email/phone
+      //to a location that didn't already have one is silently dropped.
+      foreach (array('address', 'email', 'phone') as $blockName) {
+        if (empty($params[$blockName]) || !is_array($params[$blockName])) {
+          continue;
+        }
 
-            //going to update normal fields and custom fields seperately, so pop out all the custom fields
-            $custom_fields_array = $this->pop_out_custom_fields($params[$blockName][$key]);
+        $records = array();
+        $customFieldsByKey = array();
 
-            //update normal fields on each block
-            $result = civicrm_api3($blockName, 'create', $params[$blockName][$key] + array('contact_id'=>'','location_type_id'=>''));
+        foreach ($params[$blockName] as $key => $value) {
+          if (!$this->blockInstanceHasData($blockName, $value)) {
+            continue;
+          }
+
+          $existingId = $this->_values[$blockName][$key]['id'] ?? NULL;
+          if ($existingId) {
+            $value['id'] = $existingId;
+          }
+          else {
+            unset($value['id']);
+          }
+
+          //going to update normal fields and custom fields seperately, so pop out all the custom fields
+          $customFieldsByKey[$key] = $this->pop_out_custom_fields($value);
+          $records[$key] = $value;
+        }
+
+        if (empty($records)) {
+          continue;
+        }
+
+        //address/email/phone attached to a location block have no
+        //contact_id, so APIv3's mandatory contact_id requirement for these
+        //entities doesn't work here. Use APIv4 for email/phone (matching
+        //CiviCRM core's own event location form); address still needs the
+        //BAO layer since APIv4 doesn't support this form's custom_XX field
+        //format for address custom data.
+        $savedIds = array();
+        if ($blockName == 'address') {
+          foreach ($records as $key => $record) {
+            $savedIds[$key] = CRM_Core_BAO_Address::writeRecord($record)->id;
+          }
+        }
+        else {
+          $apiClass = ($blockName == 'email') ? Email::class : Phone::class;
+          $saved = $apiClass::save(FALSE)->setRecords(array_values($records))->execute();
+          $keys = array_keys($records);
+          foreach ($saved as $index => $savedRecord) {
+            $savedIds[$keys[$index]] = $savedRecord['id'];
+          }
+        }
+
+        foreach ($savedIds as $key => $id) {
+          //update custom fields on each block, if any
+          if (!empty($customFieldsByKey[$key])) {
+            $query_array = array('entity_id' => $id,'entity_table' => "$blockName",) + $customFieldsByKey[$key];
+            $result = civicrm_api3('CustomValue', 'create', $query_array);
 
             if( !empty($result['is_error'])) {
               throw new CRM_Core_Exception($result['error_message']);
             }
+          }
 
-            //update custom fields on each block, if any
-            if(!empty($custom_fields_array)) {
-              $query_array = array('entity_id' => $id,'entity_table' => "$blockName",) + $custom_fields_array;
-              $result = civicrm_api3('CustomValue', 'create', $query_array);
+          //this block didn't previously exist on the location - link the
+          //newly-created record back onto the LocBlock.
+          if (empty($this->_values[$blockName][$key]['id'])) {
+            $fieldName = ($key == 1) ? "{$blockName}_id" : "{$blockName}_{$key}_id";
+            $locBlockUpdates[$fieldName] = $id;
+          }
+        }
+      }
 
-              if( !empty($result['is_error'])) {
-                throw new CRM_Core_Exception($result['error_message']);
-              }
-            }
+      if (!empty($locBlockUpdates)) {
+        $result = civicrm_api3('LocBlock', 'create', array('id' => $bid) + $locBlockUpdates);
+
+        if( !empty($result['is_error'])) {
+          throw new CRM_Core_Exception($result['error_message']);
         }
       }
     }
@@ -252,6 +310,37 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
     }
 
     CRM_Core_Session::singleton()->pushUserContext(CRM_Utils_System::url('civicrm/EditLocation','bid='.$bid));
+  }
+
+  /**
+   * Is there meaningful data entered for this block instance?
+   *
+   * Used to decide whether a submitted email/phone/address block should be
+   * saved at all, since every instance is always present in $params (the
+   * form always builds 2 email and 2 phone blocks) whether or not the user
+   * filled it in.
+   *
+   * @param string $blockName
+   * @param array $value
+   *
+   * @return bool
+   */
+  protected function blockInstanceHasData($blockName, array $value) {
+    if ($blockName == 'email') {
+      return !empty($value['email']);
+    }
+    if ($blockName == 'phone') {
+      return !empty($value['phone']);
+    }
+    foreach ($value as $key => $fieldValue) {
+      if ($key == 'id' || $key == 'location_type_id') {
+        continue;
+      }
+      if (!empty($fieldValue)) {
+        return TRUE;
+      }
+    }
+    return FALSE;
   }
 
   protected function pop_out_custom_fields(array &$input = array()) {
