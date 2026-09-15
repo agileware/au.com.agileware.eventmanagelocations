@@ -36,7 +36,7 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
       $loc_block = civicrm_api3('LocBlock', 'getsingle', array('id' => $bid,));
 
       if(!empty($loc_block['is_error'])) {
-        CRM_Core_Error::fatal($loc_block['error_message']);
+        throw new CRM_Core_Exception($loc_block['error_message']);
       }
       else {
         unset($loc_block['is_error']);
@@ -70,7 +70,7 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
           unset($result['is_error']);
         }
         else {
-          CRM_Core_Error::fatal($result['error_message']);
+          throw new CRM_Core_Exception($result['error_message']);
         }
         $this->_values[strtolower($tmp[0])][$tmp[1]] = $result;
       }
@@ -100,16 +100,18 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
   }
 
   public function buildQuickForm() {
-    //load form for child blocks
-    if ($this->_addBlockName) {
-      $className = "CRM_Contact_Form_Edit_{$this->_addBlockName}";
-      return $className::buildQuickForm($this);
-    }
-
     $this->applyFilter('__ALL__', 'trim');
 
     //build location blocks.
-    CRM_Contact_Form_Location::buildQuickForm($this);
+    //
+    //CRM_Contact_Form_Location::buildQuickForm() was deprecated in CiviCRM
+    //5.66 and removed in later versions (civicrm/civicrm-core#30813), so the
+    //address/email/phone blocks are built directly here instead.
+    CRM_Contact_Form_Edit_Address::buildQuickForm($this, 1);
+    CRM_Contact_Form_Edit_Email::buildQuickForm($this, 1);
+    CRM_Contact_Form_Edit_Email::buildQuickForm($this, 2);
+    CRM_Contact_Form_Edit_Phone::buildQuickForm($this, 1);
+    CRM_Contact_Form_Edit_Phone::buildQuickForm($this, 2);
 
     //fix for CRM-1971
     $this->assign('action', $this->_action);
@@ -164,7 +166,7 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
             $result = civicrm_api3($blockName, 'create', $params[$blockName][$key] + array('contact_id'=>'','location_type_id'=>''));
 
             if( !empty($result['is_error'])) {
-              CRM_Core_Error::fatal($result['error_message']);
+              throw new CRM_Core_Exception($result['error_message']);
             }
 
             //update custom fields on each block, if any
@@ -173,7 +175,7 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
               $result = civicrm_api3('CustomValue', 'create', $query_array);
 
               if( !empty($result['is_error'])) {
-                CRM_Core_Error::fatal($result['error_message']);
+                throw new CRM_Core_Exception($result['error_message']);
               }
             }
         }
