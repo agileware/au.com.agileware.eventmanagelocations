@@ -128,14 +128,19 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
     $this->assign('addBlock', FALSE);
     $this->assign('blockId', 1);
 
+    //CRM/Contact/Form/Edit/Email.tpl (this extension's EditLocation.tpl
+    //includes the full, generic template, not core's trimmed-down
+    //event-location-specific one) also renders location_type_id, on_hold,
+    //is_bulkmail and is_primary, so the "contact fields" must be built too -
+    //not just addEmailBlockNonContactFields().
     CRM_Contact_Form_Edit_Address::buildQuickForm($this, 1);
-    if (method_exists($this, 'addEmailBlockNonContactFields')) {
-      $this->addEmailBlockNonContactFields(1);
-      $this->addEmailBlockNonContactFields(2);
+    if (method_exists($this, 'addEmailBlockFields')) {
+      $this->addEmailBlockFields(1);
+      $this->addEmailBlockFields(2);
     }
     else {
-      CRM_Contact_Form_Edit_Email::buildQuickForm($this, 1);
-      CRM_Contact_Form_Edit_Email::buildQuickForm($this, 2);
+      CRM_Contact_Form_Edit_Email::buildQuickForm($this, 1, TRUE);
+      CRM_Contact_Form_Edit_Email::buildQuickForm($this, 2, TRUE);
     }
     if (method_exists($this, 'addPhoneBlockFields')) {
       $this->addPhoneBlockFields(1);
