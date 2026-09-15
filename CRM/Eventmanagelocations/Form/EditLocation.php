@@ -14,6 +14,17 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
   public function preProcess() {
     parent::preProcess();
 
+    //parent::preProcess() (CRM_Event_Form_ManageEvent) sets a "Manage
+    //Events" breadcrumb pointing at civicrm/event/manage, which doesn't
+    //make sense here since this form isn't part of that workflow.
+    CRM_Utils_System::resetBreadCrumb();
+    CRM_Utils_System::appendBreadCrumb(array(
+      array(
+        'title' => ts('Manage Event Locations'),
+        'url' => CRM_Utils_System::url('civicrm/manage-event-locations', 'reset=1'),
+      ),
+    ));
+
     if($bid = CRM_Utils_Request::retrieve('bid', 'Int')) {
       $_SESSION['loc_edt_bid'] = $bid;
 
