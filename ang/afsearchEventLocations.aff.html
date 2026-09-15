@@ -1,0 +1,15 @@
+<div af-fieldset="" af-title="Search Locations">
+  <details class="af-container" af-title="Filters" open="">
+    <div class="af-container af-layout-inline">
+      <af-field name="address_id.name" defn="{input_type: 'Text', label: 'Address Name'}" />
+      <af-field name="address_id.street_address" defn="{input_type: 'Text', label: 'Street Address'}" />
+      <af-field name="address_id.city" defn="{input_type: 'Text', label: 'City'}" />
+    </div>
+    <div class="af-container af-layout-inline">
+      <af-field name="address_id.country_id" defn="{label: 'Country'}" />
+      <af-field name="address_id.state_province_id" defn="{label: 'State/Province'}" />
+    </div>
+    <button class="af-button btn btn-warning" type="reset" crm-icon="fa-undo">Reset</button>
+  </details>
+  <crm-search-display-table search-name="EventLocations" display-name="EventLocations_Table_1"></crm-search-display-table>
+</div>
