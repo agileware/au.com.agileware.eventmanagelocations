@@ -113,34 +113,25 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
     //
     //CRM_Contact_Form_Location::buildQuickForm() was deprecated in CiviCRM
     //5.66 and removed in later versions (civicrm/civicrm-core#30813), so the
-    //address/email/phone blocks are built directly here instead. Newer
-    //CiviCRM versions give the parent class non-deprecated trait methods for
-    //email/phone; use those when available and fall back to the older,
-    //still-functional-but-deprecated calls on CiviCRM versions that predate
-    //them.
-    //
-    //CRM/Contact/Form/Edit/Address|Email|Phone.tpl all key off a $blockId
-    //(and $addBlock) smarty variable to know which block instance they are
-    //rendering, which CRM_Contact_Form_Location::buildQuickForm() used to
-    //assign for us. Assign it ourselves now that we call the block builders
-    //directly - this extension's EditLocation.tpl only ever includes each
-    //template once, so a single blockId of 1 covers all three.
-    $this->assign('addBlock', FALSE);
-    $this->assign('blockId', 1);
-
-    //CRM/Contact/Form/Edit/Email.tpl (this extension's EditLocation.tpl
-    //includes the full, generic template, not core's trimmed-down
-    //event-location-specific one) also renders location_type_id, on_hold,
-    //is_bulkmail and is_primary, so the "contact fields" must be built too -
-    //not just addEmailBlockNonContactFields().
+    //address/email/phone blocks are built directly here instead, matching
+    //the pattern CiviCRM core itself uses for its own event location form
+    //(CRM_Event_Form_ManageEvent_Location): a fixed 2 instances of email and
+    //phone, no location type/on-hold/bulk-mail/is-primary fields (those are
+    //contact concepts that don't apply to an event's location) and no
+    //dynamic "add another" - EditLocation.tpl renders its own minimal
+    //markup for email/phone rather than the full, generic
+    //CRM/Contact/Form/Edit/Email|Phone.tpl. Newer CiviCRM versions give the
+    //parent class non-deprecated trait methods for this; use them when
+    //available and fall back to the older, still-functional-but-deprecated
+    //calls on CiviCRM versions that predate them.
     CRM_Contact_Form_Edit_Address::buildQuickForm($this, 1);
-    if (method_exists($this, 'addEmailBlockFields')) {
-      $this->addEmailBlockFields(1);
-      $this->addEmailBlockFields(2);
+    if (method_exists($this, 'addEmailBlockNonContactFields')) {
+      $this->addEmailBlockNonContactFields(1);
+      $this->addEmailBlockNonContactFields(2);
     }
     else {
-      CRM_Contact_Form_Edit_Email::buildQuickForm($this, 1, TRUE);
-      CRM_Contact_Form_Edit_Email::buildQuickForm($this, 2, TRUE);
+      CRM_Contact_Form_Edit_Email::buildQuickForm($this, 1);
+      CRM_Contact_Form_Edit_Email::buildQuickForm($this, 2);
     }
     if (method_exists($this, 'addPhoneBlockFields')) {
       $this->addPhoneBlockFields(1);
