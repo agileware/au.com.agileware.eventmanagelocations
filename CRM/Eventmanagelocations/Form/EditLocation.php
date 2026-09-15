@@ -16,9 +16,14 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
 
     //parent::preProcess() (CRM_Event_Form_ManageEvent) sets a "Manage
     //Events" breadcrumb pointing at civicrm/event/manage, which doesn't
-    //make sense here since this form isn't part of that workflow.
+    //make sense here since this form isn't part of that workflow. Replace
+    //the whole trail with the standard CiviCRM >> <page> pattern.
     CRM_Utils_System::resetBreadCrumb();
     CRM_Utils_System::appendBreadCrumb(array(
+      array(
+        'title' => ts('CiviCRM'),
+        'url' => CRM_Utils_System::url('civicrm/dashboard', 'reset=1'),
+      ),
       array(
         'title' => ts('Manage Event Locations'),
         'url' => CRM_Utils_System::url('civicrm/manage-event-locations', 'reset=1'),
