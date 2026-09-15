@@ -56,6 +56,13 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
           continue;
         }
 
+        if (empty($value)) {
+          // Unused blocks (e.g. a second email/phone, or IM which this
+          // extension doesn't manage) are NULL on the LocBlock - skip them
+          // rather than calling getsingle with an invalid id.
+          continue;
+        }
+
         $result = civicrm_api3($tmp[0], 'getsingle', array('id' => $value,));
 
         if($tmp[0] == 'address') {
