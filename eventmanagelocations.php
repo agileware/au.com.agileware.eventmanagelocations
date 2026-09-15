@@ -66,7 +66,10 @@ function eventmanagelocations_civicrm_navigationMenu(&$menu) {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_permission
  */
 function eventmanagelocations_civicrm_permission(&$permissions) {
-  $permissions['edit locations'] = ts('Locations: Edit locations');
+  $permissions['edit locations'] = [
+    'label' => ts('Locations: Edit locations'),
+    'description' => ts('Edit event locations'),
+  ];
 }
 
 /**
