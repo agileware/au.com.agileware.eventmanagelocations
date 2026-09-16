@@ -1,18 +1,19 @@
 # Event manage locations (au.com.agileware.eventmanagelocations)
 
-This is a [CiviCRM](https://civicrm.org) extension that prevents CiviCRM Events from re-using
-existing Locations (`LocBlock`/address/email/phone records). By default, CiviCRM lets an
-administrator pick an existing location for an Event and edit it in place - but because a
-Location Block can be shared by multiple Events, editing it changes the location's address,
-email, and phone details for *every* Event that uses it. This extension solves that problem by:
+This is a [CiviCRM](https://civicrm.org) extension that changes how the **Location** tab of the
+CiviCRM Event Info form works, so that Locations (`LocBlock`/address/email/phone records) can be
+safely shared between Events:
 
-* Removing the **Use existing location** option from the **Location** tab of the Event
-  Info form, so every Event always gets its own new Location Block when its location details
-  are changed.
-* Providing a **Manage Locations** search and edit UI so administrators can still find, review,
-  and edit the Location Blocks that already exist in the system (outside of the Event form),
-  including any Events that are still sharing a Location Block from before this extension was
-  installed.
+* Every user can pick **Use existing location** and choose from the full list of locations known
+  to the system - not just ones already attached to some other Event. Once selected, that
+  location's address, email, and phone fields are shown **read-only**, since editing them there
+  would silently change the details for every other Event sharing that location too.
+* Only users with the **Locations: Edit locations** permission (see [Permissions](#permissions)
+  below) additionally get a **Create new location** option, with normal editable fields, and an
+  **Edit Location** link next to the location picker for editing the selected location itself
+  (which does update it in place, deliberately, for every Event that shares it).
+* A **Manage Event Locations** search screen lists that same full pool of locations, so an
+  administrator can review, edit, or pre-create locations independently of any Event.
 
 The extension is licensed under [AGPL-3.0](LICENSE.txt).
 
@@ -20,83 +21,88 @@ The extension is licensed under [AGPL-3.0](LICENSE.txt).
 
 ### Creating/editing an Event location
 
-On the **Location** tab of the CiviCRM Event Info form, the **Use existing location** selector is
-removed. Whenever the address, email, or phone details are changed and the Event is saved, a new
-Location Block is created for that Event rather than modifying a Location Block that might be
-shared with other Events.
+On the **Location** tab of the CiviCRM Event Info form (**Events > Manage Events > (an event) >
+Location**):
 
-### Manage Locations
+* **Use existing location** shows a dropdown of every known location. Selecting one loads its
+  address, email, and phone details as read-only text, along with a note explaining why they can't
+  be edited there. Saving attaches the event to that location without creating or changing any
+  records.
+* **Create new location** (only shown to users with the `edit locations` permission) shows blank,
+  editable address/email/phone fields (defaulting to the site's configured country/state, the same
+  as an Event with no location at all). Saving creates a brand new, independent location for this
+  event only.
+* Switching between the two options, or between different existing locations, reloads the page
+  rather than trying to update the fields in place - this keeps the read-only/editable state and
+  the field contents consistent with whichever option is actually selected.
 
-This extension also adds functionality to **manage existing locations**. A user with appropriate
-permissions can search, insert, and edit Location Blocks directly (independent of any Event).
+A location that's still attached to at least one other Event isn't deleted just because this Event
+stops using it (whether by switching to "Create new location" or to a different existing
+location) - it stays available in the pool for later reuse, exactly like a location that was never
+attached to an Event in the first place.
 
-#### 1. Search Locations
+### Manage Event Locations
 
-A new custom search is added by this extension. Go to the following URL to find it:
+This extension also adds a **Manage Event Locations** search screen (under **Events**) for finding
+and maintaining locations independently of any Event.
 
-```
-civicrm/contact/search/custom/list
-```
-
-Look for **Search Locations (au.com.agileware.eventmanagelocations)**. Click on it to open the
-**Locations Listing** search form.
-
-Using this custom search, a user can search locations by the following parameters:
-
-* Address name
-* Street Address
-* City
-* Country
-* State/Province
-
-Click search without selecting anything to display all locations.
-
-#### 2. Insert a new location
-
-Click **Create a new location** in the top right corner of the content block to add a new
-location. This opens the following URL:
+Go to the following URL, or use the **Manage Event Locations** entry under the **Events** menu:
 
 ```
-civicrm/EditLocation
+civicrm/manage-event-locations
 ```
 
-It displays a Location form similar to the Event Location form. A user can create a new location
-by adding address details, emails, and phone numbers.
+This lists every location with an address on file - the same full pool the Event Location tab's
+"Use existing location" picker offers, whether or not any Event is currently using it. It can be
+filtered by address name, street address, city, country, and state/province. Each row has links to:
 
-#### 3. Edit an existing location
+* **Edit Location** - opens the same form described below, at `civicrm/EditLocation?bid=ID`.
+* **Update Address** / **Delete Address** - inline actions on the underlying Address record.
 
-Click **Edit** next to any record in the **Locations Listing** search results. This opens the
-same form as inserting a new location, at the following URL:
+Editing an address here (or via **Edit Location**) updates it everywhere it's used. To give an
+Event a new, independent location instead, use **Create a New Location** (also available from this
+screen) or the Event's own Location tab.
+
+### The Edit Location form
+
+Both the **Manage Event Locations** screen and the "Edit Location" link on an Event's Location tab
+lead to:
 
 ```
 civicrm/EditLocation?bid=LOCATION_BLOCK_ID
 ```
 
-The form is pre-filled with the existing location's details. `LOCATION_BLOCK_ID` is the ID of the
-`LocBlock` the user wants to edit.
+(or `civicrm/EditLocation` with no `bid`, to create a new location from scratch). This form is
+pre-filled with the existing location's details when editing. `LOCATION_BLOCK_ID` is the ID of the
+`LocBlock` being edited.
 
-Unlike the Event Location page, saving from this form **will not** create a new Location Block -
-it updates the existing one in place. If the edited Location Block is shared by multiple Events, a
-warning is shown indicating how many other Events use it, since the update will affect all of
-them.
+Saving from this form updates the existing Location Block in place rather than creating a new one.
+Since a Location Block can be shared by multiple Events, this changes the location's address,
+email, and phone details for *every* Event that uses it.
 
 ## Permissions
 
 This extension adds a new CiviCRM permission, **Locations: Edit locations** (`edit locations`).
 Users must be granted this permission (**Administer > Users and Permissions > Permissions
-(Access Control)**) to save changes on the `civicrm/EditLocation` form; without it, the form
-fields are displayed read-only (frozen). Access to load the Manage Locations search and edit pages
-themselves only requires the standard **access CiviCRM** permission.
+(Access Control)**) to:
+
+* See and use the **Create new location** option on an Event's Location tab (without it, only
+  **Use existing location** is available).
+* Save changes on the `civicrm/EditLocation` form; without it, the form's fields are displayed
+  read-only (frozen).
+
+Access to the Event Location tab itself, and to the **Manage Event Locations** search screen,
+only requires the standard **access CiviEvent** and **access CiviCRM** permissions.
 
 ## Special configuration requirements
 
 None. There are no settings pages, API credentials, or dependent extensions to configure - once
-installed and enabled, the Event Location behaviour and Manage Locations search are immediately
-available (subject to the permission described above).
+installed and enabled, the Event Location behaviour and Manage Event Locations search are
+immediately available (subject to the permissions described above).
 
 ## Requirements
 
-* CiviCRM 5.27+
+* CiviCRM 5.51+ (uses APIv4 and SearchKit)
 
 ## Installation (Web UI)
 
