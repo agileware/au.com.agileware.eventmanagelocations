@@ -2,7 +2,9 @@
 
 require_once 'CRM/Core/Form.php';
 
+use Civi\Api4\Address;
 use Civi\Api4\Email;
+use Civi\Api4\LocBlock;
 use Civi\Api4\Phone;
 
 /**
@@ -52,14 +54,25 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
         'phone' => array(),
       );
 
-      $loc_block = civicrm_api3('LocBlock', 'getsingle', array('id' => $bid,));
+      // check_permissions is off deliberately: this LocBlock isn't attached
+      // to a contact, and if it's already attached to an Event, APIv4's ACL
+      // scoping for LocBlock/Address/Email/Phone filters by that Event's own
+      // view permission - which even a user with this page's own "edit
+      // locations" permission (already the gate for reaching this form,
+      // checked below) may not separately hold, wrongly turning a real
+      // LocBlock into "found 0". LocBlock::get()->single() throws
+      // CRM_Core_Exception itself if the id doesn't resolve, matching the
+      // throw this used to do manually off APIv3's is_error/error_message.
+      $loc_block = (array) LocBlock::get(FALSE)
+        ->addWhere('id', '=', $bid)
+        ->execute()
+        ->single();
 
-      if(!empty($loc_block['is_error'])) {
-        throw new CRM_Core_Exception($loc_block['error_message']);
-      }
-      else {
-        unset($loc_block['is_error']);
-      }
+      $apiClasses = [
+        'address' => Address::class,
+        'email' => Email::class,
+        'phone' => Phone::class,
+      ];
 
       $tmp = array();
 
@@ -78,11 +91,14 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
         if (empty($value)) {
           // Unused blocks (e.g. a second email/phone, or IM which this
           // extension doesn't manage) are NULL on the LocBlock - skip them
-          // rather than calling getsingle with an invalid id.
+          // rather than calling get() with an invalid id.
           continue;
         }
 
-        $result = civicrm_api3($tmp[0], 'getsingle', array('id' => $value,));
+        $result = (array) $apiClasses[$tmp[0]]::get(FALSE)
+          ->addWhere('id', '=', $value)
+          ->execute()
+          ->single();
 
         if($tmp[0] == 'address') {
           if (CRM_Utils_Array::value('name', $result, '') == '') {
@@ -92,12 +108,6 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
           }
         }
 
-        if( empty($result['is_error'])) {
-          unset($result['is_error']);
-        }
-        else {
-          throw new CRM_Core_Exception($result['error_message']);
-        }
         $this->_values[strtolower($tmp[0])][$tmp[1]] = $result;
       }
       $this->set('values', $this->_values);
@@ -253,6 +263,12 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
 
         foreach ($savedIds as $key => $id) {
           //update custom fields on each block, if any
+          //
+          //Left on APIv3: the field keys here are the generic custom_XX
+          //form-submission format for whichever custom fields happen to be
+          //on this entity_table, not a specific known custom group - APIv4's
+          //CustomValue API addresses a single named custom group at a time,
+          //so it doesn't have a matching generic entry point for this.
           if (!empty($customFieldsByKey[$key])) {
             $query_array = array('entity_id' => $id,'entity_table' => "$blockName",) + $customFieldsByKey[$key];
             $result = civicrm_api3('CustomValue', 'create', $query_array);
@@ -272,11 +288,10 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
       }
 
       if (!empty($locBlockUpdates)) {
-        $result = civicrm_api3('LocBlock', 'create', array('id' => $bid) + $locBlockUpdates);
-
-        if( !empty($result['is_error'])) {
-          throw new CRM_Core_Exception($result['error_message']);
-        }
+        LocBlock::update(FALSE)
+          ->addWhere('id', '=', $bid)
+          ->setValues($locBlockUpdates)
+          ->execute();
       }
     }
     else {
@@ -314,9 +329,10 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
           $params_array[$name] = $values->id;
         }
       }
-      $params_array["sequential"] = 1;
-      $result = civicrm_api3('LocBlock', 'create', $params_array);
-      $bid = $result['values'][0]['id'];
+      $bid = LocBlock::save(FALSE)
+        ->setRecords([$params_array])
+        ->execute()
+        ->first()['id'];
     }
 
     CRM_Core_Session::setStatus(ts("Location information has been saved."), ts('Saved'), 'success');

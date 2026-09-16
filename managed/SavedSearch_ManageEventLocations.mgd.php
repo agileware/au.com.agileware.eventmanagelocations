@@ -24,24 +24,14 @@ return [
             'address_id.state_province_id:label',
           ],
           'orderBy' => [],
-          'where' => [],
-          'groupBy' => [
-            'id',
+          'where' => [
+            ['address_id', 'IS NOT NULL'],
           ],
-          'join' => [
-            [
-              'Event AS LocBlock_Event_loc_block_id_01',
-              'INNER',
-              [
-                'id',
-                '=',
-                'LocBlock_Event_loc_block_id_01.loc_block_id',
-              ],
-            ],
-          ],
+          'groupBy' => [],
+          'join' => [],
           'having' => [],
         ],
-        'description' => E::ts('Only shows locations that are attached to at least one event.'),
+        'description' => E::ts('Shows every location with an address - the same full pool an event\'s "Use existing location" picker offers, whether or not any event is currently using it.'),
       ],
       'match' => [
         'name',
