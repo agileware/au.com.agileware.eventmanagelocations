@@ -67,7 +67,7 @@ function eventmanagelocations_civicrm_navigationMenu(&$menu) {
  */
 function eventmanagelocations_civicrm_permission(&$permissions) {
   $permissions['edit locations'] = [
-    'label' => ts('CiviEvent: edit locations'),
+    'label' => ts('Event manage locations: edit locations'),
     'description' => ts('Allows users to edit event locations'),
   ];
 }
