@@ -8,7 +8,7 @@ safely shared between Events:
   to the system - not just ones already attached to some other Event. Once selected, that
   location's address, email, and phone fields are shown **read-only**, since editing them there
   would silently change the details for every other Event sharing that location too.
-* Only users with the **Locations: Edit locations** permission (see [Permissions](#permissions)
+* Only users with the **CiviEvent: edit locations** permission (see [Permissions](#permissions)
   below) additionally get a **Create new location** option, with normal editable fields, and an
   **Edit Location** link next to the location picker for editing the selected location itself
   (which does update it in place, deliberately, for every Event that shares it).
@@ -82,7 +82,8 @@ email, and phone details for *every* Event that uses it.
 
 ## Permissions
 
-This extension adds a new CiviCRM permission, **Locations: Edit locations** (`edit locations`).
+This extension adds a new CiviCRM permission, **CiviEvent: edit locations** (`edit locations`,
+described to users as "Allows users to edit event locations").
 Users must be granted this permission (**Administer > Users and Permissions > Permissions
 (Access Control)**) to:
 
