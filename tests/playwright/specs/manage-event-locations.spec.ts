@@ -159,9 +159,13 @@ test.describe('Manage Event Locations listing', () => {
       // open/reposition animation.
       async function pickSelect2Value(picker: import('@playwright/test').Locator, text: string) {
         await picker.click();
-        await expect(privilegedPage.locator('.select2-drop-active')).toBeVisible();
+        // .last(): an earlier select2 instance on this same dialog can leave
+        // its own drop element lingering with this same "active" class, so
+        // more than one can match - the one that matters is whichever
+        // opened most recently.
+        await expect(privilegedPage.locator('.select2-drop-active').last()).toBeVisible();
         await privilegedPage.keyboard.type(text);
-        await expect(privilegedPage.locator('.select2-results .select2-highlighted')).toBeVisible();
+        await expect(privilegedPage.locator('.select2-results .select2-highlighted').last()).toBeVisible();
         await privilegedPage.keyboard.press('Enter');
       }
 
