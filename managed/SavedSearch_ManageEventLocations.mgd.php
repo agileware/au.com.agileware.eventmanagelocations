@@ -124,7 +124,7 @@ return [
                   'join' => 'address_id',
                   'target' => 'crm-popup',
                   'icon' => 'fa-trash',
-                  'text' => E::ts('Delete Address'),
+                  'text' => E::ts('Delete Location'),
                   'style' => 'danger',
                   'task' => 'delete',
                   'conditions' => [],

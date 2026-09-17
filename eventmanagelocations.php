@@ -39,7 +39,7 @@ function eventmanagelocations_civicrm_config(&$config) {
  * Event's private, disposable data" assumption already worked around in
  * eventmanagelocations_civicrm_buildForm() - which no longer holds now that
  * every location (reused or not) is part of a shared, persistent pool only
- * removed via explicit user action (e.g. "Delete Address" on the Manage
+ * removed via explicit user action (e.g. "Delete Location" on the Manage
  * Event Locations screen). Detaching the reference before core's delete
  * logic runs means it has nothing to clean up, leaving the LocBlock itself
  * (and its Address/Email/Phone) completely untouched - simpler and stronger

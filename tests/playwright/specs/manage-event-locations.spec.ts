@@ -9,7 +9,7 @@ import testData from '../fixtures/test-data.json';
  * ang/afsearchManageEventLocations.aff.html: the table's row-actions column
  * has no header text and renders its two links inline (no `fa-bars` menu
  * trigger to open first) - "Edit Location" (plain navigation to
- * civicrm/EditLocation?bid=[id]) and "Delete Address" (opens a `crm-popup`
+ * civicrm/EditLocation?bid=[id]) and "Delete Location" (opens a `crm-popup`
  * SearchKit task dialog against the joined Address record). The filter
  * fields above the table are afform fields labelled exactly "Address
  * Name", "Street Address", "City", "Country" and "State/Province".
@@ -123,7 +123,7 @@ test.describe('Manage Event Locations listing', () => {
     });
   });
 
-  test.describe('Delete Address row action', () => {
+  test.describe('Delete Location row action', () => {
     // A throwaway LocBlock created solely for this destructive test -
     // Locations A/B/C must never be targeted by Delete here.
     let throwaway: { locBlockId: number; addressId: number };
@@ -134,13 +134,13 @@ test.describe('Manage Event Locations listing', () => {
       throwaway = await createThrowawayLocation(name, originalStreetAddress);
     });
 
-    test('Delete Address row action removes the underlying Address record', async ({ privilegedPage }) => {
+    test('Delete Location row action removes the underlying Address record', async ({ privilegedPage }) => {
       await privilegedPage.goto(MANAGE_EVENT_LOCATIONS_URL);
       await privilegedPage.waitForLoadState('networkidle');
 
       const row = privilegedPage.locator('tr', { hasText: name });
       await expect(row).toBeVisible();
-      await row.getByRole('link', { name: 'Delete Address' }).click();
+      await row.getByRole('link', { name: 'Delete Location' }).click();
 
       // Confirm the delete inside the popup dialog (style: danger).
       const dialog = privilegedPage.locator('.crm-container .ui-dialog, .crm-popup').last();
