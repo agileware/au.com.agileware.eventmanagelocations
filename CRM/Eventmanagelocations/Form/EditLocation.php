@@ -38,6 +38,13 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
       $this->assign('loc_edit_title',ts('Edit Location'));
     }
     else {
+      // Clear any bid left behind by a previously-edited location in this
+      // same browser session - buildQuickForm() and cancelAction() both
+      // key the Delete button off this session value, and a stale one here
+      // would wrongly offer to delete that earlier location from this
+      // blank "New Location" form.
+      unset($_SESSION['loc_edt_bid']);
+
       $title = ts('New Location');
 
       CRM_Utils_System::setTitle($title);
@@ -125,7 +132,11 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
    * means "delete".
    */
   public function cancelAction() {
-    $bid = CRM_Utils_Request::retrieve('bid', 'Int');
+    // The form posts back without 'bid' in its submitted params (same
+    // reason postProcess() below reads it from here rather than the
+    // request too) - $_SESSION['loc_edt_bid'] is set in preProcess()
+    // whenever this form was reached with a bid on the URL.
+    $bid = $_SESSION['loc_edt_bid'] ?? NULL;
     if ($bid) {
       $this->deleteLocation($bid);
     }
@@ -243,8 +254,11 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
         );
 
         // Only an existing location (bid on the URL) can be deleted - a
-        // "New Location" form has nothing to delete yet.
-        if (CRM_Utils_Request::retrieve('bid', 'Int')) {
+        // "New Location" form has nothing to delete yet. Read from
+        // $_SESSION rather than the request, matching cancelAction() and
+        // postProcess() below - both need it to survive this form's own
+        // POST-back, where the submitted params don't include 'bid'.
+        if (!empty($_SESSION['loc_edt_bid'])) {
           $buttons[] = array(
             // 'cancel' routes button clicks to cancelAction() instead of
             // postProcess() (see cancelAction() for why that's exactly
