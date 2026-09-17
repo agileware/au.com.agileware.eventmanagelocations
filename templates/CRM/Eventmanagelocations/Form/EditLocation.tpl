@@ -35,6 +35,9 @@
   {if $loc_srch_url}
   <a class="crm-form-submit button"  href="{$loc_srch_url}" style="padding-top: 3px;padding-bottom: 3px;">{ts}Back to Manage Event Locations{/ts}</a>
   {/if}
+  {if $loc_delete_url}
+  <a class="crm-form-submit button" href="{$loc_delete_url}" style="padding-top: 3px;padding-bottom: 3px;" onclick="return confirm('{ts escape="js"}Are you sure you want to delete this location? This cannot be undone.{/ts}');">{ts}Delete{/ts}</a>
+  {/if}
 </div>
 
     <div id="newLocation">

@@ -7,55 +7,13 @@ import testData from '../fixtures/test-data.json';
  *
  * Grounded against managed/SavedSearch_ManageEventLocations.mgd.php and
  * ang/afsearchManageEventLocations.aff.html: the table's row-actions column
- * has no header text and renders its two links inline (no `fa-bars` menu
+ * has no header text and renders a single link inline (no `fa-bars` menu
  * trigger to open first) - "Edit Location" (plain navigation to
- * civicrm/EditLocation?bid=[id]) and "Delete Location" (opens a `crm-popup`
- * SearchKit task dialog against the joined Address record). The filter
- * fields above the table are afform fields labelled exactly "Address
+ * civicrm/EditLocation?bid=[id]). Deleting a location is done from that
+ * form itself (see edit-location-form.spec.ts), not from this listing. The
+ * filter fields above the table are afform fields labelled exactly "Address
  * Name", "Street Address", "City", "Country" and "State/Province".
  */
-
-async function getDefaultLocationTypeId(): Promise<number> {
-  const types = civiApi4<Array<{ id: number }>>('LocationType.get', {
-    where: [['is_default', '=', true]],
-    select: ['id'],
-  });
-  return types[0]?.id ?? 1;
-}
-
-async function createThrowawayLocation(name: string, streetAddress: string, city = 'Perth') {
-  const locationTypeId = await getDefaultLocationTypeId();
-
-  const address = civiApi4Single<{ id: number }>('Address.create', {
-    values: {
-      name,
-      street_address: streetAddress,
-      city,
-      location_type_id: locationTypeId,
-    },
-  });
-  const email = civiApi4Single<{ id: number }>('Email.create', {
-    values: {
-      email: `${name.toLowerCase().replace(/[^a-z0-9]+/g, '')}@example.test`,
-      location_type_id: locationTypeId,
-    },
-  });
-  const phone = civiApi4Single<{ id: number }>('Phone.create', {
-    values: {
-      phone: '0311122244',
-      location_type_id: locationTypeId,
-    },
-  });
-  const locBlock = civiApi4Single<{ id: number }>('LocBlock.create', {
-    values: {
-      address_id: address.id,
-      email_id: email.id,
-      phone_id: phone.id,
-    },
-  });
-
-  return { locBlockId: locBlock.id, addressId: address.id, emailId: email.id, phoneId: phone.id };
-}
 
 test.describe('Manage Event Locations listing', () => {
   test('lists every location that has an address on file, whether or not an Event currently uses it', async ({ privilegedPage }) => {
@@ -120,39 +78,6 @@ test.describe('Manage Event Locations listing', () => {
 
       await nonPrivilegedPage.goto(editLocationUrl(locBlockId));
       await expect(nonPrivilegedPage.getByRole('button', { name: 'Save' })).toHaveCount(0);
-    });
-  });
-
-  test.describe('Delete Location row action', () => {
-    // A throwaway LocBlock created solely for this destructive test -
-    // Locations A/B/C must never be targeted by Delete here.
-    let throwaway: { locBlockId: number; addressId: number };
-    const name = `EML Throwaway Row Actions ${Date.now()}`;
-    const originalStreetAddress = '50 Throwaway Street';
-
-    test.beforeAll(async () => {
-      throwaway = await createThrowawayLocation(name, originalStreetAddress);
-    });
-
-    test('Delete Location row action removes the underlying Address record', async ({ privilegedPage }) => {
-      await privilegedPage.goto(MANAGE_EVENT_LOCATIONS_URL);
-      await privilegedPage.waitForLoadState('networkidle');
-
-      const row = privilegedPage.locator('tr', { hasText: name });
-      await expect(row).toBeVisible();
-      await row.getByRole('link', { name: 'Delete Location' }).click();
-
-      // Confirm the delete inside the popup dialog (style: danger).
-      const dialog = privilegedPage.locator('.crm-container .ui-dialog, .crm-popup').last();
-      await expect(dialog).toBeVisible();
-      await dialog.getByRole('button', { name: /delete|yes|ok/i }).first().click();
-      await privilegedPage.waitForLoadState('networkidle');
-
-      const remaining = civiApi4<Array<{ id: number }>>('Address.get', {
-        where: [['id', '=', throwaway.addressId]],
-        select: ['id'],
-      });
-      expect(remaining).toHaveLength(0);
     });
   });
 

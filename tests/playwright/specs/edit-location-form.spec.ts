@@ -114,6 +114,47 @@ test.describe('Non-privileged users see a frozen, read-only form', () => {
       await expect(streetInput).toHaveAttribute('type', 'hidden');
     }
   });
+
+  test('no Delete link either', async ({ nonPrivilegedPage }) => {
+    const locBlockId = getLocBlockIdByLocationName(testData.locations.a.name);
+    await nonPrivilegedPage.goto(editLocationUrl(locBlockId));
+
+    await expect(nonPrivilegedPage.getByRole('link', { name: 'Delete' })).toHaveCount(0);
+  });
+});
+
+test.describe('Deleting a location from this form', () => {
+  test('the Delete link removes the LocBlock and its Address/Email/Phone, and returns to the listing', async ({ privilegedPage }) => {
+    const locationTypeId = civiApi4Single<{ id: number }>('LocationType.get', {
+      where: [['is_default', '=', true]],
+      select: ['id'],
+    }).id;
+    const address = civiApi4Single<{ id: number }>('Address.create', {
+      values: { street_address: `${Date.now()} EML Delete Button Street`, city: 'Perth', location_type_id: locationTypeId },
+    });
+    const email = civiApi4Single<{ id: number }>('Email.create', {
+      values: { email: `emldeletebutton${Date.now()}@example.test`, location_type_id: locationTypeId },
+    });
+    const phone = civiApi4Single<{ id: number }>('Phone.create', {
+      values: { phone: '0311122266', location_type_id: locationTypeId },
+    });
+    const locBlock = civiApi4Single<{ id: number }>('LocBlock.create', {
+      values: { address_id: address.id, email_id: email.id, phone_id: phone.id },
+    });
+
+    privilegedPage.on('dialog', (dialog) => dialog.accept());
+
+    await privilegedPage.goto(editLocationUrl(locBlock.id));
+    await privilegedPage.getByRole('link', { name: 'Delete' }).click();
+    await privilegedPage.waitForLoadState('networkidle');
+
+    expect(privilegedPage.url()).toContain('q=civicrm%2Fmanage-event-locations');
+
+    expect(civiApi4<Array<{ id: number }>>('LocBlock.get', { where: [['id', '=', locBlock.id]], select: ['id'] })).toHaveLength(0);
+    expect(civiApi4<Array<{ id: number }>>('Address.get', { where: [['id', '=', address.id]], select: ['id'] })).toHaveLength(0);
+    expect(civiApi4<Array<{ id: number }>>('Email.get', { where: [['id', '=', email.id]], select: ['id'] })).toHaveLength(0);
+    expect(civiApi4<Array<{ id: number }>>('Phone.get', { where: [['id', '=', phone.id]], select: ['id'] })).toHaveLength(0);
+  });
 });
 
 test.describe('Creating a new location from this form', () => {

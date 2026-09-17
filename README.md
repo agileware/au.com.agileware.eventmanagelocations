@@ -54,10 +54,9 @@ civicrm/manage-event-locations
 
 This lists every location with an address on file - the same full pool the Event Location tab's
 "Use existing location" picker offers, whether or not any Event is currently using it. It can be
-filtered by address name, street address, city, country, and state/province. Each row has links to:
-
-* **Edit Location** - opens the same form described below, at `civicrm/EditLocation?bid=ID`.
-* **Delete Location** - removes the underlying Address record.
+filtered by address name, street address, city, country, and state/province. Each row has an
+**Edit Location** link, which opens the form described below, at `civicrm/EditLocation?bid=ID` -
+deleting a location is also done from that form.
 
 Editing an address here (or via **Edit Location**) updates it everywhere it's used. To give an
 Event a new, independent location instead, use **Create a New Location** (also available from this
@@ -79,6 +78,10 @@ pre-filled with the existing location's details when editing. `LOCATION_BLOCK_ID
 Saving from this form updates the existing Location Block in place rather than creating a new one.
 Since a Location Block can be shared by multiple Events, this changes the location's address,
 email, and phone details for *every* Event that uses it.
+
+When editing an existing location, a **Delete** link is also shown (to users with the `edit
+locations` permission). It removes the Location Block and its Address, Email, and Phone records
+entirely, after a confirmation prompt, and returns to the **Manage Event Locations** screen.
 
 ## Permissions
 

@@ -36,6 +36,15 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
       $_SESSION['loc_edt_bid'] = $bid;
 
       $this->assign('loc_edit_title',ts('Edit Location'));
+
+      if (CRM_Utils_Request::retrieve('action', 'String') === 'delete') {
+        // Deletes and redirects away; nothing below this point runs.
+        $this->deleteLocation($bid);
+      }
+
+      if (CRM_Core_Permission::check('edit locations')) {
+        $this->assign('loc_delete_url', CRM_Utils_System::url('civicrm/EditLocation', "bid={$bid}&action=delete", TRUE));
+      }
     }
     else {
       $title = ts('New Location');
@@ -112,6 +121,47 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
       }
       $this->set('values', $this->_values);
     }
+  }
+
+  /**
+   * Delete this location's LocBlock and its Address/Email/Phone records,
+   * then redirect back to the Manage Event Locations listing.
+   *
+   * Does not check whether any Event still references this LocBlock - it
+   * didn't before either, when this same deletion was reachable as a
+   * SearchKit row action on the Manage Event Locations listing.
+   */
+  protected function deleteLocation(int $bid): void {
+    if (!CRM_Core_Permission::check('edit locations')) {
+      throw new CRM_Core_Exception(ts('You do not have permission to delete this location.'));
+    }
+
+    $locBlock = (array) LocBlock::get(FALSE)
+      ->addWhere('id', '=', $bid)
+      ->execute()
+      ->single();
+
+    $fieldsByEntity = [
+      Address::class => ['address_id'],
+      Email::class => ['email_id', 'email_2_id'],
+      Phone::class => ['phone_id', 'phone_2_id'],
+    ];
+
+    foreach ($fieldsByEntity as $apiClass => $fields) {
+      $ids = array_values(array_filter(array_map(fn($field) => $locBlock[$field] ?? NULL, $fields)));
+      if ($ids) {
+        $apiClass::delete(FALSE)
+          ->addWhere('id', 'IN', $ids)
+          ->execute();
+      }
+    }
+
+    LocBlock::delete(FALSE)
+      ->addWhere('id', '=', $bid)
+      ->execute();
+
+    CRM_Core_Session::setStatus(ts('Location has been deleted.'), ts('Deleted'), 'success');
+    CRM_Utils_System::redirect(CRM_Utils_System::url('civicrm/manage-event-locations', 'reset=1'));
   }
 
   public function setDefaultValues() {
