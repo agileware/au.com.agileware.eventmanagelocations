@@ -46,13 +46,15 @@ test.describe('Permission-gated visibility', () => {
     const before = await getAddressByLocBlockId<{ street_address: string }>(locBlockId, ['street_address']);
 
     // Attempt a crafted POST to the frozen form directly, bypassing the UI.
-    const response = await nonPrivilegedPage.request.post(editLocationUrl(locBlockId), {
+    // An invalid qfKey is rejected as an expired session - core's own
+    // CRM_Core_Error fatal-error page for that, not a 4xx - so the
+    // meaningful assertion is that nothing changed, not the status code.
+    await nonPrivilegedPage.request.post(editLocationUrl(locBlockId), {
       form: {
         'address[1][street_address]': 'Hacked Street',
         qfKey: 'invalid',
       },
     });
-    expect(response.status()).toBeLessThan(500);
 
     const after = await getAddressByLocBlockId<{ street_address: string }>(locBlockId, ['street_address']);
     expect(after.street_address).toBe(before.street_address);

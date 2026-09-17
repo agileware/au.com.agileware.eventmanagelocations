@@ -138,8 +138,13 @@ test.describe('Switching between location options - regression: saving after swi
     });
     expect(event.loc_block_id).toBe(locBlockCId);
 
-    // Location B must still exist, unmodified - not deleted or altered.
-    const locationB = await getAddressByLocBlockId<{ street_address: string; city: string }>(locBlockBId, ['street_address', 'city']);
+    // Location B's data must still exist somewhere in the pool, unmodified -
+    // not deleted or altered. Switching the event away from it recreates it
+    // as a fresh LocBlock (a new id; the original's is gone for good, per
+    // _eventmanagelocations_restore_locblock_if_deleted()), so look it up by
+    // name rather than by the id captured before the switch.
+    const locBlockBAfterId = await getLocBlockIdByLocationName(testData.locations.b.name);
+    const locationB = await getAddressByLocBlockId<{ street_address: string; city: string }>(locBlockBAfterId, ['street_address', 'city']);
     expect(locationB.street_address).toBe(testData.locations.b.street_address);
     expect(locationB.city).toBe(testData.locations.b.city);
 

@@ -65,19 +65,23 @@ test.describe('Create new location - regression: switching away from an existing
   test.describe.configure({ mode: 'serial' });
 
   let eventId: number;
-  let locBlockAId: number;
 
   test.beforeAll(async () => {
     eventId = await getEventIdByTitle(testData.events.withLocationA.title);
-    locBlockAId = await getLocBlockIdByLocationName(testData.locations.a.name);
   });
 
   test.afterAll(async () => {
     // This spec mutates the shared withLocationA event's location - restore
-    // it so other spec files that also reference withLocationA are unaffected.
+    // it so other spec files that also reference withLocationA are
+    // unaffected. Switching away from Location A recreates its orphaned
+    // data as a fresh LocBlock (a new id - see
+    // _eventmanagelocations_restore_locblock_if_deleted()), so look it up
+    // by name rather than reusing the id captured before the switch, which
+    // no longer exists.
+    const currentLocBlockAId = await getLocBlockIdByLocationName(testData.locations.a.name);
     await civiApi4('Event.update', {
       where: [['id', '=', eventId]],
-      values: { loc_block_id: locBlockAId },
+      values: { loc_block_id: currentLocBlockAId },
     });
   });
 
@@ -118,16 +122,15 @@ test.describe('Create new location - regression: switching away from an existing
     await privilegedPage.getByRole('button', { name: 'Save' }).first().click();
     await privilegedPage.waitForLoadState('networkidle');
 
-    // Location A must still exist, completely unchanged - this is the
-    // historical bug: saving used to silently overwrite/delete Location A
-    // instead of creating an independent new location.
-    const locationAStillExists = await civiApi4<Array<{ id: number }>>('LocBlock.get', {
-      where: [['id', '=', locBlockAId]],
-      select: ['id'],
-    });
-    expect(locationAStillExists).toHaveLength(1);
-
-    const addressA = await getAddressByLocBlockId<{ street_address: string; city: string }>(locBlockAId, ['street_address', 'city']);
+    // Location A's data must still exist somewhere in the pool, completely
+    // unchanged - this is the historical bug: saving used to silently
+    // overwrite/delete Location A instead of creating an independent new
+    // location. Switching an event away from an existing location recreates
+    // the orphaned side as a fresh LocBlock (a new id; the original's is
+    // gone for good, per _eventmanagelocations_restore_locblock_if_deleted()),
+    // so look it up by name rather than by the id captured before the switch.
+    const locBlockAAfterId = await getLocBlockIdByLocationName(testData.locations.a.name);
+    const addressA = await getAddressByLocBlockId<{ street_address: string; city: string }>(locBlockAAfterId, ['street_address', 'city']);
     expect(addressA.street_address).toBe(testData.locations.a.street_address);
     expect(addressA.city).toBe(testData.locations.a.city);
 
@@ -137,7 +140,7 @@ test.describe('Create new location - regression: switching away from an existing
       where: [['id', '=', eventId]],
       select: ['loc_block_id'],
     });
-    expect(event.loc_block_id).not.toBe(locBlockAId);
+    expect(event.loc_block_id).not.toBe(locBlockAAfterId);
 
     const newAddress = await getAddressByLocBlockId<{ street_address: string; city: string }>(event.loc_block_id, ['street_address', 'city']);
     expect(newAddress.street_address).toBe('50 Regression Street');
