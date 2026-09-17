@@ -1,0 +1,14 @@
+{
+  "privileged": {
+    "username": "eml_privileged",
+    "password": "Eml-Test-Privileged-1!",
+    "email": "eml-privileged@example.test",
+    "role": "eml_privileged"
+  },
+  "nonPrivileged": {
+    "username": "eml_nonprivileged",
+    "password": "Eml-Test-NonPrivileged-1!",
+    "email": "eml-nonprivileged@example.test",
+    "role": "eml_nonprivileged"
+  }
+}

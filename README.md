@@ -112,6 +112,12 @@ immediately available (subject to the permissions described above).
 Learn more about installing CiviCRM extensions in the [CiviCRM Sysadmin
 Guide](https://docs.civicrm.org/sysadmin/en/latest/customize/extensions/).
 
+## Testing
+
+Automated front-end (Playwright) tests covering the behaviour described above live in
+[tests/playwright](tests/playwright/README.md) and run in CI on every push/PR via
+[.github/workflows/frontend-tests.yml](.github/workflows/frontend-tests.yml).
+
 # About the Authors
 
 This CiviCRM extension was developed by the team at [Agileware](https://agileware.com.au).
