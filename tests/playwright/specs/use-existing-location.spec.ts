@@ -1,4 +1,4 @@
-import { test, expect, gotoEventLocationTab, MANAGE_EVENT_LOCATIONS_URL } from '../fixtures/base';
+import { test, expect, gotoEventLocationTab, selectExistingLocation, MANAGE_EVENT_LOCATIONS_URL } from '../fixtures/base';
 import { civiApi4, civiApi4Single, getEventIdByTitle, getLocBlockIdByLocationName, getAddressByLocBlockId } from '../fixtures/civi';
 import testData from '../fixtures/test-data.json';
 
@@ -14,17 +14,19 @@ test.describe('Use existing location', () => {
   async function assertsReadOnlyExistingLocation(page: import('@playwright/test').Page) {
     const eventId = await getEventIdByTitle(testData.events.blankOne.title);
     const locBlockId = await getLocBlockIdByLocationName(testData.locations.b.name);
-    await gotoEventLocationTab(page, eventId);
+    await selectExistingLocation(page, eventId, locBlockId);
 
-    await page.locator('#loc_event_id').selectOption(String(locBlockId), { force: true });
-    await page.waitForLoadState('networkidle');
-
-    await expect(page.getByText(testData.locations.b.street_address)).toBeVisible();
-    await expect(page.getByText(testData.locations.b.city)).toBeVisible();
+    // Scoped to the frozen address block, not the whole page - the
+    // #loc_event_id dropdown's own option list (and crm-select2's "chosen"
+    // display) also contains this same address text as part of each
+    // location's combined "name :: street :: city" label.
+    const addressBlock = page.locator('#Address_Block_1');
+    await expect(addressBlock.getByText(testData.locations.b.street_address)).toBeVisible();
+    await expect(addressBlock.getByText(testData.locations.b.city)).toBeVisible();
 
     const streetInput = page.locator('input[name="address[1][street_address]"]');
     if (await streetInput.count()) {
-      await expect(streetInput).toBeDisabled();
+      await expect(streetInput).toHaveAttribute('type', 'hidden');
     }
 
     await expect(page.getByText('Existing Location Selected')).toBeVisible();
@@ -47,14 +49,10 @@ test.describe('Use existing location', () => {
     const eventId = await getEventIdByTitle(testData.events.blankOne.title);
     const locBlockId = await getLocBlockIdByLocationName(testData.locations.b.name);
 
-    await gotoEventLocationTab(privilegedPage, eventId);
-    await privilegedPage.locator('#loc_event_id').selectOption(String(locBlockId), { force: true });
-    await privilegedPage.waitForLoadState('networkidle');
+    await selectExistingLocation(privilegedPage, eventId, locBlockId);
     await expect(privilegedPage.getByText(/Edit Location link/i)).toBeVisible();
 
-    await gotoEventLocationTab(nonPrivilegedPage, eventId);
-    await nonPrivilegedPage.locator('#loc_event_id').selectOption(String(locBlockId), { force: true });
-    await nonPrivilegedPage.waitForLoadState('networkidle');
+    await selectExistingLocation(nonPrivilegedPage, eventId, locBlockId);
     await expect(nonPrivilegedPage.getByText(/Edit Location link/i)).toHaveCount(0);
   });
 
@@ -64,9 +62,7 @@ test.describe('Use existing location', () => {
 
     const before = await getAddressByLocBlockId<{ street_address: string; city: string }>(locBlockId, ['street_address', 'city']);
 
-    await gotoEventLocationTab(privilegedPage, eventId);
-    await privilegedPage.locator('#loc_event_id').selectOption(String(locBlockId), { force: true });
-    await privilegedPage.waitForLoadState('networkidle');
+    await selectExistingLocation(privilegedPage, eventId, locBlockId);
     await privilegedPage.getByRole('button', { name: 'Save' }).first().click();
     await privilegedPage.waitForLoadState('networkidle');
 

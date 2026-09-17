@@ -7,8 +7,9 @@ import testData from '../fixtures/test-data.json';
  *
  * Grounded against managed/SavedSearch_ManageEventLocations.mgd.php and
  * ang/afsearchManageEventLocations.aff.html: the table's row-actions column
- * has no header text and an `fa-bars` icon trigger; its three links are
- * "Edit Location" (plain navigation to civicrm/EditLocation?bid=[id]),
+ * has no header text and renders its three links inline (no `fa-bars`
+ * menu trigger to open first) - "Edit Location" (plain navigation to
+ * civicrm/EditLocation?bid=[id]),
  * "Update Address" and "Delete Address" (both open a `crm-popup` SearchKit
  * task dialog against the joined Address record). The filter fields above
  * the table are afform fields labelled exactly "Address Name", "Street
@@ -72,9 +73,11 @@ test.describe('Manage Event Locations listing', () => {
     await privilegedPage.waitForLoadState('networkidle');
 
     // Best-effort: the filter above the table is an afform field labelled
-    // "City" (see ang/afsearchManageEventLocations.aff.html). If the label
-    // isn't wired up as expected, fall back to any visible textbox.
-    let cityFilter = privilegedPage.getByLabel('City', { exact: true });
+    // "City" (see ang/afsearchManageEventLocations.aff.html). getByLabel
+    // alone also matches an unrelated "City" radio button in the page's own
+    // advanced-search field picker, so scope to the textbox role. If the
+    // label isn't wired up as expected, fall back to any visible textbox.
+    let cityFilter = privilegedPage.getByRole('textbox', { name: 'City', exact: true });
     if (!(await cityFilter.count())) {
       cityFilter = privilegedPage.getByRole('textbox').first();
     }
@@ -98,7 +101,6 @@ test.describe('Manage Event Locations listing', () => {
       await privilegedPage.waitForLoadState('networkidle');
 
       const row = privilegedPage.locator('tr', { hasText: testData.locations.c.name });
-      await row.locator('.fa-bars').click();
       await row.getByRole('link', { name: 'Edit Location' }).click();
       await privilegedPage.waitForLoadState('networkidle');
 
@@ -140,7 +142,6 @@ test.describe('Manage Event Locations listing', () => {
 
       const row = privilegedPage.locator('tr', { hasText: name });
       await expect(row).toBeVisible();
-      await row.locator('.fa-bars').click();
       await row.getByRole('link', { name: 'Update Address' }).click();
 
       // SearchKit renders this as a crm-popup dialog with the Address's own
@@ -166,7 +167,6 @@ test.describe('Manage Event Locations listing', () => {
 
       const row = privilegedPage.locator('tr', { hasText: name });
       await expect(row).toBeVisible();
-      await row.locator('.fa-bars').click();
       await row.getByRole('link', { name: 'Delete Address' }).click();
 
       // Confirm the delete inside the popup dialog (style: danger).

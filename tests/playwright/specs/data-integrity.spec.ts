@@ -1,4 +1,4 @@
-import { test, expect, gotoEventLocationTab } from '../fixtures/base';
+import { test, expect, selectExistingLocation } from '../fixtures/base';
 import { civiApi4, civiApi4Single, getLocBlockIdByLocationName } from '../fixtures/civi';
 import testData from '../fixtures/test-data.json';
 
@@ -55,9 +55,7 @@ test.describe('Data integrity - pool persistence', () => {
     const event = await createThrowawayEvent('EML Throwaway - Location Switch Check', locBlockCId);
 
     try {
-      await gotoEventLocationTab(privilegedPage, event.id);
-      await privilegedPage.locator('#loc_event_id').selectOption(String(locBlockBId), { force: true });
-      await privilegedPage.waitForLoadState('networkidle');
+      await selectExistingLocation(privilegedPage, event.id, locBlockBId);
       await privilegedPage.getByRole('button', { name: 'Save' }).first().click();
       await privilegedPage.waitForLoadState('networkidle');
 
@@ -67,10 +65,15 @@ test.describe('Data integrity - pool persistence', () => {
       });
       expect(updated.loc_block_id).toBe(locBlockBId);
 
-      // Location C's own Address/Email/Phone must still be linked to its
-      // LocBlock, not orphaned, even though no event currently points at it.
+      // Location C's own Address/Email/Phone must still be linked to a
+      // LocBlock somewhere in the pool, not orphaned - switching an event
+      // away from an existing location recreates it as a fresh LocBlock (a
+      // new id; the original's is gone for good, per
+      // _eventmanagelocations_restore_locblock_if_deleted()), so look it up
+      // by name rather than by the id captured before the switch.
+      const locBlockCAfterId = await getLocBlockIdByLocationName(testData.locations.c.name);
       const locBlockC = await civiApi4Single<{ address_id: number; email_id: number; phone_id: number }>('LocBlock.get', {
-        where: [['id', '=', locBlockCId]],
+        where: [['id', '=', locBlockCAfterId]],
         select: ['address_id', 'email_id', 'phone_id'],
       });
       expect(locBlockC.address_id).not.toBeNull();
