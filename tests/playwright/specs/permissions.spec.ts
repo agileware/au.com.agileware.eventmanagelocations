@@ -1,4 +1,4 @@
-import { test, expect, gotoEventLocationTab, editLocationUrl } from '../fixtures/base';
+import { test, expect, gotoEventLocationTab, editLocationUrl, civiAdminUrl } from '../fixtures/base';
 import { civiApi4Single, getEventIdByTitle, getLocBlockIdByLocationName, getAddressByLocBlockId } from '../fixtures/civi';
 import testData from '../fixtures/test-data.json';
 
@@ -67,7 +67,7 @@ test.describe('Permission-gated visibility', () => {
 
 test.describe('Permission definition', () => {
   test('edit locations permission appears correctly in Access Control', async ({ adminPage }) => {
-    await adminPage.goto('/civicrm/admin/access/wp-permissions?reset=1');
+    await adminPage.goto(civiAdminUrl('civicrm/admin/access/wp-permissions', { reset: 1 }));
     await expect(adminPage.getByText('Event manage locations: edit locations')).toBeVisible();
     await expect(adminPage.getByText('Allows users to edit event locations')).toBeVisible();
   });

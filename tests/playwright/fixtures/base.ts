@@ -56,16 +56,42 @@ export const test = base.extend<Fixtures>({
 export { expect };
 
 /**
+ * Builds an admin-side CiviCRM URL: `/wp-admin/admin.php?page=CiviCRM&q=<path>&...`.
+ *
+ * This WordPress integration serves back-office CiviCRM pages (Manage
+ * Events, Manage Event Locations, Access Control, EditLocation, etc.)
+ * through the WP admin dispatcher rather than the clean `/civicrm/...`
+ * frontend path - that clean path is reserved for genuinely public pages
+ * routed through the CiviCRM base page (e.g. civicrm/event/info), which
+ * anonymous visitors need to reach without ever hitting wp-admin.
+ */
+export function civiAdminUrl(path: string, params: Record<string, string | number> = {}): string {
+  const query = new URLSearchParams({ page: 'CiviCRM', q: path });
+  for (const [key, value] of Object.entries(params)) {
+    query.set(key, String(value));
+  }
+  return `/wp-admin/admin.php?${query.toString()}`;
+}
+
+/**
  * Navigate straight to an Event's Location tab.
+ *
+ * `civicrm/event/manage/location` is this tab's own registered menu path
+ * (CRM_Event_Form_ManageEvent_Location), not a subpage of the generic
+ * `civicrm/event/manage` wizard URL. The tab also does an initial render
+ * plus a separate AJAX re-fetch, so this waits for network idle before
+ * returning - callers can rely on the DOM already reflecting the
+ * server-resolved option/location, not an interim state.
  */
 export async function gotoEventLocationTab(page: Page, eventId: number) {
-  await page.goto(
-    `/civicrm/event/manage?action=update&id=${eventId}&reset=1&selectedChild=location`
-  );
+  await page.goto(civiAdminUrl('civicrm/event/manage/location', { reset: 1, id: eventId, action: 'update' }));
+  await page.waitForLoadState('networkidle');
 }
 
 export function editLocationUrl(bid?: number) {
-  return bid ? `/civicrm/EditLocation?bid=${bid}&reset=1` : '/civicrm/EditLocation?reset=1';
+  return bid
+    ? civiAdminUrl('civicrm/EditLocation', { bid, reset: 1 })
+    : civiAdminUrl('civicrm/EditLocation', { reset: 1 });
 }
 
-export const MANAGE_EVENT_LOCATIONS_URL = '/civicrm/manage-event-locations?reset=1';
+export const MANAGE_EVENT_LOCATIONS_URL = civiAdminUrl('civicrm/manage-event-locations', { reset: 1 });
