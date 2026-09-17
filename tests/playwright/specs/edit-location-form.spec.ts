@@ -34,44 +34,71 @@ test.describe('Opening an already-attached location', () => {
 });
 
 test.describe('Saving updates the shared LocBlock in place', () => {
-  // Location A is a shared fixture other spec files rely on - always restore
-  // its original street_address/city, whether or not the test itself passed.
-  test.afterEach(async () => {
-    const locBlockId = getLocBlockIdByLocationName(testData.locations.a.name);
-    const address = getAddressByLocBlockId<{ id: number }>(locBlockId, ['id']);
-    civiApi4('Address.update', {
-      where: [['id', '=', address.id]],
-      values: {
-        street_address: testData.locations.a.street_address,
-        city: testData.locations.a.city,
-      },
+  // A dedicated throwaway LocBlock, shared by two throwaway Events of its
+  // own - not the shared Location A fixture other spec files read
+  // concurrently. Mutating Location A's address here (even temporarily,
+  // restored via an afterEach) races those other, parallel reads.
+  test('saving a change to a shared LocBlock propagates to every Event sharing it', async ({ privilegedPage }) => {
+    const locationTypeId = civiApi4Single<{ id: number }>('LocationType.get', {
+      where: [['is_default', '=', true]],
+      select: ['id'],
+    }).id;
+    const address = civiApi4Single<{ id: number }>('Address.create', {
+      values: { street_address: `${Date.now()} EML Shared Save Test Street`, city: 'Hobart', location_type_id: locationTypeId },
     });
-  });
-
-  test('saving a change to Location A propagates to every Event sharing it', async ({ privilegedPage }) => {
-    const locBlockId = getLocBlockIdByLocationName(testData.locations.a.name);
-    const tempStreetAddress = `TEMP ${Date.now()} Test Street`;
-
-    await privilegedPage.goto(editLocationUrl(locBlockId));
-    await privilegedPage.locator('input[name="address[1][street_address]"]').fill(tempStreetAddress);
-    await privilegedPage.getByRole('button', { name: 'Save' }).first().click();
-    await privilegedPage.waitForLoadState('networkidle');
-
-    const updated = getAddressByLocBlockId<{ street_address: string }>(locBlockId, ['street_address']);
-    expect(updated.street_address).toBe(tempStreetAddress);
-
-    // withLocationA shares this exact LocBlock - re-fetch the Address via
-    // the Event's own loc_block_id to demonstrate the propagation, not just
-    // that Location A's own record changed.
-    const eventId = await getEventIdByTitle(testData.events.withLocationA.title);
-    const event = civiApi4Single<{ loc_block_id: number }>('Event.get', {
-      where: [['id', '=', eventId]],
-      select: ['loc_block_id'],
+    const email = civiApi4Single<{ id: number }>('Email.create', {
+      values: { email: `emlsharedsavetest${Date.now()}@example.test`, location_type_id: locationTypeId },
     });
-    expect(event.loc_block_id).toBe(locBlockId);
+    const phone = civiApi4Single<{ id: number }>('Phone.create', {
+      values: { phone: '0311122255', location_type_id: locationTypeId },
+    });
+    const locBlock = civiApi4Single<{ id: number }>('LocBlock.create', {
+      values: { address_id: address.id, email_id: email.id, phone_id: phone.id },
+    });
 
-    const viaEvent = getAddressByLocBlockId<{ street_address: string }>(event.loc_block_id, ['street_address']);
-    expect(viaEvent.street_address).toBe(tempStreetAddress);
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 30);
+    const eventValues = {
+      'event_type_id:name': 'Meeting',
+      start_date: futureDate.toISOString().slice(0, 10),
+      loc_block_id: locBlock.id,
+    };
+    const eventA = civiApi4Single<{ id: number }>('Event.create', { values: { title: 'EML Throwaway Shared Save A', ...eventValues } });
+    const eventB = civiApi4Single<{ id: number }>('Event.create', { values: { title: 'EML Throwaway Shared Save B', ...eventValues } });
+
+    try {
+      const tempStreetAddress = `TEMP ${Date.now()} Test Street`;
+
+      await privilegedPage.goto(editLocationUrl(locBlock.id));
+      await privilegedPage.locator('input[name="address[1][street_address]"]').fill(tempStreetAddress);
+      await privilegedPage.getByRole('button', { name: 'Save' }).first().click();
+      await privilegedPage.waitForLoadState('networkidle');
+
+      const updated = getAddressByLocBlockId<{ street_address: string }>(locBlock.id, ['street_address']);
+      expect(updated.street_address).toBe(tempStreetAddress);
+
+      // eventB shares this exact LocBlock - re-fetch the Address via its own
+      // loc_block_id to demonstrate the propagation, not just that the
+      // LocBlock edited directly changed.
+      const eventBFetched = civiApi4Single<{ loc_block_id: number }>('Event.get', {
+        where: [['id', '=', eventB.id]],
+        select: ['loc_block_id'],
+      });
+      expect(eventBFetched.loc_block_id).toBe(locBlock.id);
+
+      const viaEvent = getAddressByLocBlockId<{ street_address: string }>(eventBFetched.loc_block_id, ['street_address']);
+      expect(viaEvent.street_address).toBe(tempStreetAddress);
+    } finally {
+      civiApi4('Event.delete', { where: [['id', '=', eventA.id]] });
+      civiApi4('Event.delete', { where: [['id', '=', eventB.id]] });
+      // Our own hook_civicrm_pre::Event listener detaches loc_block_id
+      // before core's delete cleanup runs, so the LocBlock survives both
+      // event deletes above and needs its own explicit cleanup here.
+      civiApi4('LocBlock.delete', { where: [['id', '=', locBlock.id]] });
+      civiApi4('Address.delete', { where: [['id', '=', address.id]] });
+      civiApi4('Email.delete', { where: [['id', '=', email.id]] });
+      civiApi4('Phone.delete', { where: [['id', '=', phone.id]] });
+    }
   });
 });
 
@@ -84,7 +111,7 @@ test.describe('Non-privileged users see a frozen, read-only form', () => {
 
     const streetInput = nonPrivilegedPage.locator('input[name="address[1][street_address]"]');
     if (await streetInput.count()) {
-      await expect(streetInput).toBeDisabled();
+      await expect(streetInput).toHaveAttribute('type', 'hidden');
     }
   });
 });

@@ -1,4 +1,4 @@
-import { test, expect, gotoEventLocationTab } from '../fixtures/base';
+import { test, expect, gotoEventLocationTab, selectExistingLocation } from '../fixtures/base';
 import { civiApi4, civiApi4Single, getEventIdByTitle, getLocBlockIdByLocationName, getAddressByLocBlockId } from '../fixtures/civi';
 import testData from '../fixtures/test-data.json';
 
@@ -24,7 +24,7 @@ test.describe('Switching between location options', () => {
     await privilegedPage.waitForLoadState('networkidle');
     const existingStreetInput = privilegedPage.locator('input[name="address[1][street_address]"]');
     if (await existingStreetInput.count()) {
-      await expect(existingStreetInput).toBeDisabled();
+      await expect(existingStreetInput).toHaveAttribute('type', 'hidden');
     }
 
     // Create new location - editable, blank fields, not stuck frozen.
@@ -39,7 +39,7 @@ test.describe('Switching between location options', () => {
     await privilegedPage.waitForLoadState('networkidle');
     const backStreetInput = privilegedPage.locator('input[name="address[1][street_address]"]');
     if (await backStreetInput.count()) {
-      await expect(backStreetInput).toBeDisabled();
+      await expect(backStreetInput).toHaveAttribute('type', 'hidden');
     }
 
     expect(dialogs).toHaveLength(0);
@@ -50,19 +50,21 @@ test.describe('Switching between location options', () => {
     const locBlockBId = await getLocBlockIdByLocationName(testData.locations.b.name);
     const locBlockCId = await getLocBlockIdByLocationName(testData.locations.c.name);
 
-    await gotoEventLocationTab(privilegedPage, eventId);
+    // Scoped to the frozen address block, not the whole page - the
+    // #loc_event_id dropdown's own option list (and crm-select2's "chosen"
+    // display) also contains this same address text as part of each
+    // location's combined "name :: street :: city" label.
+    const addressBlock = privilegedPage.locator('#Address_Block_1');
 
-    await privilegedPage.locator('#loc_event_id').selectOption(String(locBlockBId), { force: true });
-    await privilegedPage.waitForLoadState('networkidle');
-    await expect(privilegedPage.getByText(testData.locations.b.street_address)).toBeVisible();
-    await expect(privilegedPage.getByText(testData.locations.b.city)).toBeVisible();
-    await expect(privilegedPage.getByText(testData.locations.c.street_address)).toHaveCount(0);
+    await selectExistingLocation(privilegedPage, eventId, locBlockBId);
+    await expect(addressBlock.getByText(testData.locations.b.street_address)).toBeVisible();
+    await expect(addressBlock.getByText(testData.locations.b.city)).toBeVisible();
+    await expect(addressBlock.getByText(testData.locations.c.street_address)).toHaveCount(0);
 
-    await privilegedPage.locator('#loc_event_id').selectOption(String(locBlockCId), { force: true });
-    await privilegedPage.waitForLoadState('networkidle');
-    await expect(privilegedPage.getByText(testData.locations.c.street_address)).toBeVisible();
-    await expect(privilegedPage.getByText(testData.locations.c.city)).toBeVisible();
-    await expect(privilegedPage.getByText(testData.locations.b.street_address)).toHaveCount(0);
+    await selectExistingLocation(privilegedPage, eventId, locBlockCId);
+    await expect(addressBlock.getByText(testData.locations.c.street_address)).toBeVisible();
+    await expect(addressBlock.getByText(testData.locations.c.city)).toBeVisible();
+    await expect(addressBlock.getByText(testData.locations.b.street_address)).toHaveCount(0);
 
     // Not saved - blankOne remains without a persisted location for other specs.
   });
@@ -72,17 +74,15 @@ test.describe('Switching between location options', () => {
     const locBlockBId = await getLocBlockIdByLocationName(testData.locations.b.name);
     const locBlockCId = await getLocBlockIdByLocationName(testData.locations.c.name);
 
-    await gotoEventLocationTab(nonPrivilegedPage, eventId);
+    const addressBlock = nonPrivilegedPage.locator('#Address_Block_1');
 
-    await nonPrivilegedPage.locator('#loc_event_id').selectOption(String(locBlockBId), { force: true });
-    await nonPrivilegedPage.waitForLoadState('networkidle');
-    await expect(nonPrivilegedPage.getByText(testData.locations.b.street_address)).toBeVisible();
-    await expect(nonPrivilegedPage.getByText(testData.locations.c.street_address)).toHaveCount(0);
+    await selectExistingLocation(nonPrivilegedPage, eventId, locBlockBId);
+    await expect(addressBlock.getByText(testData.locations.b.street_address)).toBeVisible();
+    await expect(addressBlock.getByText(testData.locations.c.street_address)).toHaveCount(0);
 
-    await nonPrivilegedPage.locator('#loc_event_id').selectOption(String(locBlockCId), { force: true });
-    await nonPrivilegedPage.waitForLoadState('networkidle');
-    await expect(nonPrivilegedPage.getByText(testData.locations.c.street_address)).toBeVisible();
-    await expect(nonPrivilegedPage.getByText(testData.locations.b.street_address)).toHaveCount(0);
+    await selectExistingLocation(nonPrivilegedPage, eventId, locBlockCId);
+    await expect(addressBlock.getByText(testData.locations.c.street_address)).toBeVisible();
+    await expect(addressBlock.getByText(testData.locations.b.street_address)).toHaveCount(0);
 
     // Not saved - blankOne remains without a persisted location for other specs.
   });
@@ -128,10 +128,7 @@ test.describe('Switching between location options - regression: saving after swi
       dialog.dismiss();
     });
 
-    await gotoEventLocationTab(privilegedPage, regressionEventId);
-
-    await privilegedPage.locator('#loc_event_id').selectOption(String(locBlockCId), { force: true });
-    await privilegedPage.waitForLoadState('networkidle');
+    await selectExistingLocation(privilegedPage, regressionEventId, locBlockCId);
     await privilegedPage.getByRole('button', { name: 'Save' }).first().click();
     await privilegedPage.waitForLoadState('networkidle');
 

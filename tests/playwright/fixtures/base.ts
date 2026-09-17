@@ -88,6 +88,31 @@ export async function gotoEventLocationTab(page: Page, eventId: number) {
   await page.waitForLoadState('networkidle');
 }
 
+/**
+ * Navigate straight to an Event's Location tab with a given existing
+ * location already selected.
+ *
+ * Picking `#loc_event_id`'s option client-side doesn't work as a test
+ * interaction: CiviCRM's crm-select2 (Select2.js) hides the raw `<select>`
+ * and manages its own separate widget, and per this tab's own
+ * location-picker.js, address/email/phone are read-only static text baked
+ * in server-side at render time - a client-side dropdown change is only
+ * ever a trigger for reloading the page with `_locOpt`/`_locId` query
+ * params (see eventmanagelocations.php's buildForm hook), never applied
+ * live. Requesting that same reload directly is both simpler and exercises
+ * the same server-side code path a real selection ultimately relies on.
+ */
+export async function selectExistingLocation(page: Page, eventId: number, locBlockId: number) {
+  await page.goto(civiAdminUrl('civicrm/event/manage/location', {
+    reset: 1,
+    id: eventId,
+    action: 'update',
+    _locOpt: 2,
+    _locId: locBlockId,
+  }));
+  await page.waitForLoadState('networkidle');
+}
+
 export function editLocationUrl(bid?: number) {
   return bid
     ? civiAdminUrl('civicrm/EditLocation', { bid, reset: 1 })

@@ -85,8 +85,12 @@ test.describe('Create new location - regression: switching away from an existing
     await gotoEventLocationTab(privilegedPage, eventId);
 
     // Starts on "Use existing location" with Location A selected/frozen.
+    // Scoped to the frozen address block, not the whole page - the
+    // #loc_event_id dropdown's own option list (and crm-select2's "chosen"
+    // display) also contains this same address text as part of Location
+    // A's combined "name :: street :: city" label.
     await expect(privilegedPage.locator('input[type="radio"][name="location_option"][value="2"]')).toBeChecked();
-    await expect(privilegedPage.getByText(testData.locations.a.street_address)).toBeVisible();
+    await expect(privilegedPage.locator('#Address_Block_1').getByText(testData.locations.a.street_address)).toBeVisible();
 
     await privilegedPage.locator('input[type="radio"][name="location_option"][value="1"]').check();
     await privilegedPage.waitForLoadState('networkidle');

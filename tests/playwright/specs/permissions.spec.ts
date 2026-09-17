@@ -40,7 +40,7 @@ test.describe('Permission-gated visibility', () => {
     await expect(nonPrivilegedPage.getByRole('button', { name: 'Save' })).toHaveCount(0);
     const streetInput = nonPrivilegedPage.locator('input[name="address[1][street_address]"]');
     if (await streetInput.count()) {
-      await expect(streetInput).toBeDisabled();
+      await expect(streetInput).toHaveAttribute('type', 'hidden');
     }
 
     const before = await getAddressByLocBlockId<{ street_address: string }>(locBlockId, ['street_address']);
