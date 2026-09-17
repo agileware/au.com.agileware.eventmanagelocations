@@ -1,5 +1,5 @@
 import { test, expect, gotoEventLocationTab, editLocationUrl } from '../fixtures/base';
-import { civiApi4Single, getEventIdByTitle, getLocBlockIdByLocationName } from '../fixtures/civi';
+import { civiApi4Single, getEventIdByTitle, getLocBlockIdByLocationName, getAddressByLocBlockId } from '../fixtures/civi';
 import testData from '../fixtures/test-data.json';
 
 /**
@@ -39,11 +39,7 @@ test.describe('Permission-gated visibility', () => {
       await expect(streetInput).toBeDisabled();
     }
 
-    const before = await civiApi4Single<{ street_address: string }>('Address.get', {
-      join: [['LocBlock AS locblock', 'INNER']],
-      where: [['locblock.id', '=', locBlockId]],
-      select: ['street_address'],
-    });
+    const before = await getAddressByLocBlockId<{ street_address: string }>(locBlockId, ['street_address']);
 
     // Attempt a crafted POST to the frozen form directly, bypassing the UI.
     const response = await nonPrivilegedPage.request.post(editLocationUrl(locBlockId), {
@@ -54,11 +50,7 @@ test.describe('Permission-gated visibility', () => {
     });
     expect(response.status()).toBeLessThan(500);
 
-    const after = await civiApi4Single<{ street_address: string }>('Address.get', {
-      join: [['LocBlock AS locblock', 'INNER']],
-      where: [['locblock.id', '=', locBlockId]],
-      select: ['street_address'],
-    });
+    const after = await getAddressByLocBlockId<{ street_address: string }>(locBlockId, ['street_address']);
     expect(after.street_address).toBe(before.street_address);
   });
 

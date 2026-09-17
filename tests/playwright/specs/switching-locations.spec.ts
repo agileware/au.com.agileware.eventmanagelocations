@@ -1,5 +1,5 @@
 import { test, expect, gotoEventLocationTab } from '../fixtures/base';
-import { civiApi4, civiApi4Single, getEventIdByTitle, getLocBlockIdByLocationName } from '../fixtures/civi';
+import { civiApi4, civiApi4Single, getEventIdByTitle, getLocBlockIdByLocationName, getAddressByLocBlockId } from '../fixtures/civi';
 import testData from '../fixtures/test-data.json';
 
 /**
@@ -142,17 +142,12 @@ test.describe('Switching between location options - regression: saving after swi
     expect(event.loc_block_id).toBe(locBlockCId);
 
     // Location B must still exist, unmodified - not deleted or altered.
-    const locationB = await civiApi4Single<{ street_address: string; city: string }>('Address.get', {
-      join: [['LocBlock AS locblock', 'INNER']],
-      where: [['locblock.id', '=', locBlockBId]],
-      select: ['street_address', 'city'],
-    });
+    const locationB = await getAddressByLocBlockId<{ street_address: string; city: string }>(locBlockBId, ['street_address', 'city']);
     expect(locationB.street_address).toBe(testData.locations.b.street_address);
     expect(locationB.city).toBe(testData.locations.b.city);
 
     // No bogus duplicate LocBlock was created for Location C's address.
     const locationCMatches = await civiApi4<Array<{ id: number }>>('LocBlock.get', {
-      join: [['Address AS address_id', 'INNER']],
       where: [['address_id.name', '=', testData.locations.c.name]],
       select: ['id'],
     });

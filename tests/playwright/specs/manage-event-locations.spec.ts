@@ -90,7 +90,6 @@ test.describe('Manage Event Locations listing', () => {
   test.describe('Edit Location row action', () => {
     test("navigates to civicrm/EditLocation?bid=ID pre-filled with that location's data", async ({ privilegedPage }) => {
       const locBlockId = civiApi4Single<{ id: number }>('LocBlock.get', {
-        join: [['Address AS address_id', 'INNER']],
         where: [['address_id.name', '=', testData.locations.c.name]],
         select: ['id'],
       }).id;
@@ -114,7 +113,6 @@ test.describe('Manage Event Locations listing', () => {
     // different location, read from testData rather than a hardcoded id.
     test('is editable only for privileged users - a non-privileged user sees no Save button', async ({ nonPrivilegedPage }) => {
       const locBlockId = civiApi4Single<{ id: number }>('LocBlock.get', {
-        join: [['Address AS address_id', 'INNER']],
         where: [['address_id.name', '=', testData.locations.c.name]],
         select: ['id'],
       }).id;
@@ -213,7 +211,6 @@ test.describe('Manage Event Locations listing', () => {
 
     // Clean up the throwaway LocBlock/Address created above.
     const locBlock = civiApi4Single<{ id: number; address_id: number }>('LocBlock.get', {
-      join: [['Address AS address_id', 'INNER']],
       where: [['address_id.street_address', '=', streetAddress]],
       select: ['id', 'address_id'],
     });

@@ -1,5 +1,5 @@
 import { test, expect, gotoEventLocationTab, MANAGE_EVENT_LOCATIONS_URL } from '../fixtures/base';
-import { civiApi4, civiApi4Single, getEventIdByTitle, getLocBlockIdByLocationName } from '../fixtures/civi';
+import { civiApi4, civiApi4Single, getEventIdByTitle, getLocBlockIdByLocationName, getAddressByLocBlockId } from '../fixtures/civi';
 import testData from '../fixtures/test-data.json';
 
 /**
@@ -62,11 +62,7 @@ test.describe('Use existing location', () => {
     const eventId = await getEventIdByTitle(testData.events.blankTwo.title);
     const locBlockId = await getLocBlockIdByLocationName(testData.locations.c.name);
 
-    const before = await civiApi4Single<{ street_address: string; city: string }>('Address.get', {
-      join: [['LocBlock AS locblock', 'INNER']],
-      where: [['locblock.id', '=', locBlockId]],
-      select: ['street_address', 'city'],
-    });
+    const before = await getAddressByLocBlockId<{ street_address: string; city: string }>(locBlockId, ['street_address', 'city']);
 
     await gotoEventLocationTab(privilegedPage, eventId);
     await privilegedPage.locator('#loc_event_id').selectOption(String(locBlockId));
@@ -80,16 +76,11 @@ test.describe('Use existing location', () => {
     });
     expect(event.loc_block_id).toBe(locBlockId);
 
-    const after = await civiApi4Single<{ street_address: string; city: string }>('Address.get', {
-      join: [['LocBlock AS locblock', 'INNER']],
-      where: [['locblock.id', '=', locBlockId]],
-      select: ['street_address', 'city'],
-    });
+    const after = await getAddressByLocBlockId<{ street_address: string; city: string }>(locBlockId, ['street_address', 'city']);
     expect(after).toEqual(before);
 
     // No duplicate LocBlock rows were created for this address.
     const duplicateCount = await civiApi4<Array<{ id: number }>>('LocBlock.get', {
-      join: [['Address AS address_id', 'INNER']],
       where: [['address_id.name', '=', testData.locations.c.name]],
       select: ['id'],
     });

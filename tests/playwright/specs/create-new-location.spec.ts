@@ -1,5 +1,5 @@
 import { test, expect, gotoEventLocationTab } from '../fixtures/base';
-import { civiApi4, civiApi4Single, getEventIdByTitle, getLocBlockIdByLocationName } from '../fixtures/civi';
+import { civiApi4, civiApi4Single, getEventIdByTitle, getLocBlockIdByLocationName, getAddressByLocBlockId } from '../fixtures/civi';
 import testData from '../fixtures/test-data.json';
 
 /**
@@ -47,22 +47,14 @@ test.describe('Create new location', () => {
     });
     expect(event.loc_block_id).toBeTruthy();
 
-    const newAddress = await civiApi4Single<{ street_address: string; city: string }>('Address.get', {
-      join: [['LocBlock AS locblock', 'INNER']],
-      where: [['locblock.id', '=', event.loc_block_id]],
-      select: ['street_address', 'city'],
-    });
+    const newAddress = await getAddressByLocBlockId<{ street_address: string; city: string }>(event.loc_block_id, ['street_address', 'city']);
     expect(newAddress.street_address).toBe('99 New Street');
     expect(newAddress.city).toBe('Perth');
 
     // None of the seeded locations were touched by this save.
     for (const location of Object.values(testData.locations)) {
       const locBlockId = await getLocBlockIdByLocationName(location.name);
-      const address = await civiApi4Single<{ street_address: string; city: string }>('Address.get', {
-        join: [['LocBlock AS locblock', 'INNER']],
-        where: [['locblock.id', '=', locBlockId]],
-        select: ['street_address', 'city'],
-      });
+      const address = await getAddressByLocBlockId<{ street_address: string; city: string }>(locBlockId, ['street_address', 'city']);
       expect(address.street_address).toBe(location.street_address);
       expect(address.city).toBe(location.city);
     }
@@ -131,11 +123,7 @@ test.describe('Create new location - regression: switching away from an existing
     });
     expect(locationAStillExists).toHaveLength(1);
 
-    const addressA = await civiApi4Single<{ street_address: string; city: string }>('Address.get', {
-      join: [['LocBlock AS locblock', 'INNER']],
-      where: [['locblock.id', '=', locBlockAId]],
-      select: ['street_address', 'city'],
-    });
+    const addressA = await getAddressByLocBlockId<{ street_address: string; city: string }>(locBlockAId, ['street_address', 'city']);
     expect(addressA.street_address).toBe(testData.locations.a.street_address);
     expect(addressA.city).toBe(testData.locations.a.city);
 
@@ -147,11 +135,7 @@ test.describe('Create new location - regression: switching away from an existing
     });
     expect(event.loc_block_id).not.toBe(locBlockAId);
 
-    const newAddress = await civiApi4Single<{ street_address: string; city: string }>('Address.get', {
-      join: [['LocBlock AS locblock', 'INNER']],
-      where: [['locblock.id', '=', event.loc_block_id]],
-      select: ['street_address', 'city'],
-    });
+    const newAddress = await getAddressByLocBlockId<{ street_address: string; city: string }>(event.loc_block_id, ['street_address', 'city']);
     expect(newAddress.street_address).toBe('50 Regression Street');
     expect(newAddress.city).toBe('Adelaide');
   });

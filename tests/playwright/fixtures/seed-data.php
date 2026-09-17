@@ -16,14 +16,15 @@ $testData = json_decode(file_get_contents(__DIR__ . '/test-data.json'), TRUE);
 $locationTypeId = CRM_Core_BAO_LocationType::getDefault()->id ?? 1;
 
 function eml_seed_location(array $location, int $locationTypeId): int {
+  // `address_id.name` is a plain implicit-join dot reference (LocBlock has
+  // a direct address_id FK) - APIv4 auto-joins it. An explicit ->addJoin()
+  // here collides with that auto-join and produces invalid SQL.
   $existing = LocBlock::get(FALSE)
-    ->addJoin('Address AS address_id', 'INNER')
     ->addWhere('address_id.name', '=', $location['name'])
     ->selectRowCount()
     ->execute();
   if ($existing->count()) {
     return LocBlock::get(FALSE)
-      ->addJoin('Address AS address_id', 'INNER')
       ->addWhere('address_id.name', '=', $location['name'])
       ->execute()->first()['id'];
   }

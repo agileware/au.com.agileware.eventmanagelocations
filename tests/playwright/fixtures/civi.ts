@@ -32,7 +32,6 @@ export function civiApi4Single<T = any>(entityDotAction: string, params: Record<
 
 export function getLocBlockIdByLocationName(name: string): number {
   const rows = civiApi4<Array<{ id: number }>>('LocBlock.get', {
-    join: [['Address AS address_id', 'INNER']],
     where: [['address_id.name', '=', name]],
     select: ['id'],
   });
@@ -40,6 +39,24 @@ export function getLocBlockIdByLocationName(name: string): number {
     throw new Error(`No LocBlock found for location named "${name}" - has the test data been seeded?`);
   }
   return rows[0].id;
+}
+
+/**
+ * Looks up a LocBlock's Address by going LocBlock -> address_id -> Address in
+ * two plain, join-free calls, rather than an explicit `addJoin` in the
+ * reverse direction (Address has no direct FK to LocBlock, only the other
+ * way around - an explicit join here needs its own ON condition to be
+ * reliable, so this sidesteps that entirely).
+ */
+export function getAddressByLocBlockId<T = any>(locBlockId: number, select: string[]): T {
+  const locBlock = civiApi4Single<{ address_id: number }>('LocBlock.get', {
+    where: [['id', '=', locBlockId]],
+    select: ['address_id'],
+  });
+  return civiApi4Single<T>('Address.get', {
+    where: [['id', '=', locBlock.address_id]],
+    select,
+  });
 }
 
 export function getEventIdByTitle(title: string): number {

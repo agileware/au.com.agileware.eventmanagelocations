@@ -116,7 +116,6 @@ test.describe('Data integrity - pool persistence', () => {
     for (const location of Object.values(testData.locations)) {
       test(`Location "${location.name}"`, async () => {
         const locBlock = await civiApi4Single<{ address_id: number; email_id: number; phone_id: number }>('LocBlock.get', {
-          join: [['Address AS address_id', 'INNER']],
           where: [['address_id.name', '=', location.name]],
           select: ['address_id', 'email_id', 'phone_id'],
         });

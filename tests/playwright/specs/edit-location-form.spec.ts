@@ -1,5 +1,5 @@
 import { test, expect, gotoEventLocationTab, editLocationUrl, MANAGE_EVENT_LOCATIONS_URL } from '../fixtures/base';
-import { civiApi4, civiApi4Single, getEventIdByTitle, getLocBlockIdByLocationName } from '../fixtures/civi';
+import { civiApi4, civiApi4Single, getEventIdByTitle, getLocBlockIdByLocationName, getAddressByLocBlockId } from '../fixtures/civi';
 import testData from '../fixtures/test-data.json';
 
 /**
@@ -38,11 +38,7 @@ test.describe('Saving updates the shared LocBlock in place', () => {
   // its original street_address/city, whether or not the test itself passed.
   test.afterEach(async () => {
     const locBlockId = getLocBlockIdByLocationName(testData.locations.a.name);
-    const address = civiApi4Single<{ id: number }>('Address.get', {
-      join: [['LocBlock AS locblock', 'INNER']],
-      where: [['locblock.id', '=', locBlockId]],
-      select: ['id'],
-    });
+    const address = getAddressByLocBlockId<{ id: number }>(locBlockId, ['id']);
     civiApi4('Address.update', {
       where: [['id', '=', address.id]],
       values: {
@@ -61,11 +57,7 @@ test.describe('Saving updates the shared LocBlock in place', () => {
     await privilegedPage.getByRole('button', { name: 'Save' }).click();
     await privilegedPage.waitForLoadState('networkidle');
 
-    const updated = civiApi4Single<{ street_address: string }>('Address.get', {
-      join: [['LocBlock AS locblock', 'INNER']],
-      where: [['locblock.id', '=', locBlockId]],
-      select: ['street_address'],
-    });
+    const updated = getAddressByLocBlockId<{ street_address: string }>(locBlockId, ['street_address']);
     expect(updated.street_address).toBe(tempStreetAddress);
 
     // withLocationA shares this exact LocBlock - re-fetch the Address via
@@ -78,11 +70,7 @@ test.describe('Saving updates the shared LocBlock in place', () => {
     });
     expect(event.loc_block_id).toBe(locBlockId);
 
-    const viaEvent = civiApi4Single<{ street_address: string }>('Address.get', {
-      join: [['LocBlock AS locblock', 'INNER']],
-      where: [['locblock.id', '=', event.loc_block_id]],
-      select: ['street_address'],
-    });
+    const viaEvent = getAddressByLocBlockId<{ street_address: string }>(event.loc_block_id, ['street_address']);
     expect(viaEvent.street_address).toBe(tempStreetAddress);
   });
 });
@@ -137,7 +125,6 @@ test.describe('Creating a new location from this form', () => {
     const locBlock = civiApi4Single<{ id: number; address_id: number; email_id: number; phone_id: number }>(
       'LocBlock.get',
       {
-        join: [['Address AS address_id', 'INNER']],
         where: [['address_id.street_address', '=', streetAddress]],
         select: ['id', 'address_id', 'email_id', 'phone_id'],
       }
