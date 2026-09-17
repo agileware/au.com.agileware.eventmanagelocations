@@ -57,7 +57,7 @@ This lists every location with an address on file - the same full pool the Event
 filtered by address name, street address, city, country, and state/province. Each row has links to:
 
 * **Edit Location** - opens the same form described below, at `civicrm/EditLocation?bid=ID`.
-* **Update Address** / **Delete Address** - inline actions on the underlying Address record.
+* **Delete Address** - removes the underlying Address record.
 
 Editing an address here (or via **Edit Location**) updates it everywhere it's used. To give an
 Event a new, independent location instead, use **Create a New Location** (also available from this
