@@ -33,11 +33,18 @@ NONPRIV_EMAIL=$(json_get "$USERS_JSON" nonPrivileged email)
 NONPRIV_ROLE=$(json_get "$USERS_JSON" nonPrivileged role)
 
 echo "Creating WP roles..."
+# "edit all events" is CiviCRM core's own Event permission
+# (CRM_Event_BAO_Event::checkPermission()) gating access to any Manage
+# Event tab at all (including this extension's Location tab) - both test
+# roles need it just to reach the tab. This extension's own "edit
+# locations" permission is a separate, narrower gate within that tab
+# (Create new location / the Edit Location form), which only the
+# privileged role gets.
 run wp role create "$PRIV_ROLE" "EML Privileged (test)" --clone=subscriber >/dev/null 2>&1 || true
-run wp cap add "$PRIV_ROLE" "access CiviCRM" "access CiviEvent" "edit locations"
+run wp cap add "$PRIV_ROLE" "access CiviCRM" "access CiviEvent" "edit all events" "edit locations"
 
 run wp role create "$NONPRIV_ROLE" "EML Non-Privileged (test)" --clone=subscriber >/dev/null 2>&1 || true
-run wp cap add "$NONPRIV_ROLE" "access CiviCRM" "access CiviEvent"
+run wp cap add "$NONPRIV_ROLE" "access CiviCRM" "access CiviEvent" "edit all events"
 
 echo "Creating WP users..."
 if run wp user get "$PRIV_USERNAME" >/dev/null 2>&1; then
