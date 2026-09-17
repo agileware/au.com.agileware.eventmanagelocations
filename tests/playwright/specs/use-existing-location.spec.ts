@@ -1,0 +1,114 @@
+import { test, expect, gotoEventLocationTab, MANAGE_EVENT_LOCATIONS_URL } from '../fixtures/base';
+import { civiApi4, civiApi4Single, getEventIdByTitle, getLocBlockIdByLocationName } from '../fixtures/civi';
+import testData from '../fixtures/test-data.json';
+
+/**
+ * Test plan Suite B: Use existing location (all users).
+ */
+
+test.describe('Use existing location', () => {
+  // Playwright's test runner resolves fixtures by statically parsing the
+  // destructured parameter names, so each fixture needs its own literal
+  // `async ({ privilegedPage }) => {...}` - a loop over a dynamic fixture
+  // name can't be destructured as `{ [pageFixture]: page }`.
+  async function assertsReadOnlyExistingLocation(page: import('@playwright/test').Page) {
+    const eventId = await getEventIdByTitle(testData.events.blankOne.title);
+    const locBlockId = await getLocBlockIdByLocationName(testData.locations.b.name);
+    await gotoEventLocationTab(page, eventId);
+
+    await page.locator('#loc_event_id').selectOption(String(locBlockId));
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.getByText(testData.locations.b.street_address)).toBeVisible();
+    await expect(page.getByText(testData.locations.b.city)).toBeVisible();
+
+    const streetInput = page.locator('input[name="address[1][street_address]"]');
+    if (await streetInput.count()) {
+      await expect(streetInput).toBeDisabled();
+    }
+
+    await expect(page.getByText('Existing Location Selected')).toBeVisible();
+    // Regression: core's own "This location is used by N other events..." message must not appear.
+    await expect(page.getByText(/used by \d+ other event/i)).toHaveCount(0);
+  }
+
+  test('privileged user selecting an existing location loads its real address read-only', async ({ privilegedPage }) => {
+    await assertsReadOnlyExistingLocation(privilegedPage);
+  });
+
+  test('non-privileged user selecting an existing location loads its real address read-only', async ({ nonPrivilegedPage }) => {
+    await assertsReadOnlyExistingLocation(nonPrivilegedPage);
+  });
+
+  test('help text mentions the Edit Location link for privileged users, and omits it for non-privileged users', async ({
+    privilegedPage,
+    nonPrivilegedPage,
+  }) => {
+    const eventId = await getEventIdByTitle(testData.events.blankOne.title);
+    const locBlockId = await getLocBlockIdByLocationName(testData.locations.b.name);
+
+    await gotoEventLocationTab(privilegedPage, eventId);
+    await privilegedPage.locator('#loc_event_id').selectOption(String(locBlockId));
+    await privilegedPage.waitForLoadState('networkidle');
+    await expect(privilegedPage.getByText(/Edit Location link/i)).toBeVisible();
+
+    await gotoEventLocationTab(nonPrivilegedPage, eventId);
+    await nonPrivilegedPage.locator('#loc_event_id').selectOption(String(locBlockId));
+    await nonPrivilegedPage.waitForLoadState('networkidle');
+    await expect(nonPrivilegedPage.getByText(/Edit Location link/i)).toHaveCount(0);
+  });
+
+  test('saving with an existing location selected attaches the event without modifying the location', async ({ privilegedPage }) => {
+    const eventId = await getEventIdByTitle(testData.events.blankTwo.title);
+    const locBlockId = await getLocBlockIdByLocationName(testData.locations.c.name);
+
+    const before = await civiApi4Single<{ street_address: string; city: string }>('Address.get', {
+      join: [['LocBlock AS locblock', 'INNER']],
+      where: [['locblock.id', '=', locBlockId]],
+      select: ['street_address', 'city'],
+    });
+
+    await gotoEventLocationTab(privilegedPage, eventId);
+    await privilegedPage.locator('#loc_event_id').selectOption(String(locBlockId));
+    await privilegedPage.waitForLoadState('networkidle');
+    await privilegedPage.getByRole('button', { name: 'Save' }).click();
+    await privilegedPage.waitForLoadState('networkidle');
+
+    const event = await civiApi4Single<{ loc_block_id: number }>('Event.get', {
+      where: [['id', '=', eventId]],
+      select: ['loc_block_id'],
+    });
+    expect(event.loc_block_id).toBe(locBlockId);
+
+    const after = await civiApi4Single<{ street_address: string; city: string }>('Address.get', {
+      join: [['LocBlock AS locblock', 'INNER']],
+      where: [['locblock.id', '=', locBlockId]],
+      select: ['street_address', 'city'],
+    });
+    expect(after).toEqual(before);
+
+    // No duplicate LocBlock rows were created for this address.
+    const duplicateCount = await civiApi4<Array<{ id: number }>>('LocBlock.get', {
+      join: [['Address AS address_id', 'INNER']],
+      where: [['address_id.name', '=', testData.locations.c.name]],
+      select: ['id'],
+    });
+    expect(duplicateCount).toHaveLength(1);
+  });
+
+  test('Use existing location lists the full pool, matching Manage Event Locations', async ({ privilegedPage }) => {
+    const eventId = await getEventIdByTitle(testData.events.blankOne.title);
+    await gotoEventLocationTab(privilegedPage, eventId);
+
+    const options = await privilegedPage.locator('#loc_event_id option').allTextContents();
+    for (const location of Object.values(testData.locations)) {
+      expect(options.some((text) => text.includes(location.name))).toBe(true);
+    }
+
+    await privilegedPage.goto(MANAGE_EVENT_LOCATIONS_URL);
+    await privilegedPage.waitForLoadState('networkidle');
+    for (const location of Object.values(testData.locations)) {
+      await expect(privilegedPage.getByText(location.name)).toBeVisible();
+    }
+  });
+});

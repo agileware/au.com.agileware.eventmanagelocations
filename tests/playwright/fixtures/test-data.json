@@ -1,0 +1,12 @@
+{
+  "locations": {
+    "a": { "name": "EML Test Location A", "street_address": "1 Test Street", "city": "Melbourne" },
+    "b": { "name": "EML Test Location B", "street_address": "2 Test Street", "city": "Sydney" },
+    "c": { "name": "EML Test Location C", "street_address": "3 Test Street", "city": "Brisbane" }
+  },
+  "events": {
+    "blankOne": { "title": "EML Test Event - No Location 1" },
+    "blankTwo": { "title": "EML Test Event - No Location 2" },
+    "withLocationA": { "title": "EML Test Event - With Location A" }
+  }
+}
