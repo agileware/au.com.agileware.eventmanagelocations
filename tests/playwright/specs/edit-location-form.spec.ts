@@ -54,7 +54,7 @@ test.describe('Saving updates the shared LocBlock in place', () => {
 
     await privilegedPage.goto(editLocationUrl(locBlockId));
     await privilegedPage.locator('input[name="address[1][street_address]"]').fill(tempStreetAddress);
-    await privilegedPage.getByRole('button', { name: 'Save' }).click();
+    await privilegedPage.getByRole('button', { name: 'Save' }).first().click();
     await privilegedPage.waitForLoadState('networkidle');
 
     const updated = getAddressByLocBlockId<{ street_address: string }>(locBlockId, ['street_address']);
@@ -101,7 +101,7 @@ test.describe('Creating a new location from this form', () => {
     await privilegedPage.locator('input[name="address[1][city]"]').fill(city);
     await privilegedPage.locator('input[name="email[1][email]"]').fill(email);
     await privilegedPage.locator('input[name="phone[1][phone]"]').fill(phone);
-    await privilegedPage.getByRole('button', { name: 'Save' }).click();
+    await privilegedPage.getByRole('button', { name: 'Save' }).first().click();
     await privilegedPage.waitForLoadState('networkidle');
 
     // Appears in the Manage Event Locations pool.

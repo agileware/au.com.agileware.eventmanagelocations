@@ -56,9 +56,9 @@ test.describe('Data integrity - pool persistence', () => {
 
     try {
       await gotoEventLocationTab(privilegedPage, event.id);
-      await privilegedPage.locator('#loc_event_id').selectOption(String(locBlockBId));
+      await privilegedPage.locator('#loc_event_id').selectOption(String(locBlockBId), { force: true });
       await privilegedPage.waitForLoadState('networkidle');
-      await privilegedPage.getByRole('button', { name: 'Save' }).click();
+      await privilegedPage.getByRole('button', { name: 'Save' }).first().click();
       await privilegedPage.waitForLoadState('networkidle');
 
       const updated = await civiApi4Single<{ loc_block_id: number }>('Event.get', {

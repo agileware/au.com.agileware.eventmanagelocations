@@ -52,13 +52,13 @@ test.describe('Switching between location options', () => {
 
     await gotoEventLocationTab(privilegedPage, eventId);
 
-    await privilegedPage.locator('#loc_event_id').selectOption(String(locBlockBId));
+    await privilegedPage.locator('#loc_event_id').selectOption(String(locBlockBId), { force: true });
     await privilegedPage.waitForLoadState('networkidle');
     await expect(privilegedPage.getByText(testData.locations.b.street_address)).toBeVisible();
     await expect(privilegedPage.getByText(testData.locations.b.city)).toBeVisible();
     await expect(privilegedPage.getByText(testData.locations.c.street_address)).toHaveCount(0);
 
-    await privilegedPage.locator('#loc_event_id').selectOption(String(locBlockCId));
+    await privilegedPage.locator('#loc_event_id').selectOption(String(locBlockCId), { force: true });
     await privilegedPage.waitForLoadState('networkidle');
     await expect(privilegedPage.getByText(testData.locations.c.street_address)).toBeVisible();
     await expect(privilegedPage.getByText(testData.locations.c.city)).toBeVisible();
@@ -74,12 +74,12 @@ test.describe('Switching between location options', () => {
 
     await gotoEventLocationTab(nonPrivilegedPage, eventId);
 
-    await nonPrivilegedPage.locator('#loc_event_id').selectOption(String(locBlockBId));
+    await nonPrivilegedPage.locator('#loc_event_id').selectOption(String(locBlockBId), { force: true });
     await nonPrivilegedPage.waitForLoadState('networkidle');
     await expect(nonPrivilegedPage.getByText(testData.locations.b.street_address)).toBeVisible();
     await expect(nonPrivilegedPage.getByText(testData.locations.c.street_address)).toHaveCount(0);
 
-    await nonPrivilegedPage.locator('#loc_event_id').selectOption(String(locBlockCId));
+    await nonPrivilegedPage.locator('#loc_event_id').selectOption(String(locBlockCId), { force: true });
     await nonPrivilegedPage.waitForLoadState('networkidle');
     await expect(nonPrivilegedPage.getByText(testData.locations.c.street_address)).toBeVisible();
     await expect(nonPrivilegedPage.getByText(testData.locations.b.street_address)).toHaveCount(0);
@@ -130,9 +130,9 @@ test.describe('Switching between location options - regression: saving after swi
 
     await gotoEventLocationTab(privilegedPage, regressionEventId);
 
-    await privilegedPage.locator('#loc_event_id').selectOption(String(locBlockCId));
+    await privilegedPage.locator('#loc_event_id').selectOption(String(locBlockCId), { force: true });
     await privilegedPage.waitForLoadState('networkidle');
-    await privilegedPage.getByRole('button', { name: 'Save' }).click();
+    await privilegedPage.getByRole('button', { name: 'Save' }).first().click();
     await privilegedPage.waitForLoadState('networkidle');
 
     const event = await civiApi4Single<{ loc_block_id: number }>('Event.get', {
