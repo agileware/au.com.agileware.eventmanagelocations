@@ -38,6 +38,13 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
       $this->assign('loc_edit_title',ts('Edit Location'));
     }
     else {
+      // Clear any bid left behind by a previously-edited location in this
+      // same browser session - buildQuickForm() and cancelAction() both
+      // key the Delete button off this session value, and a stale one here
+      // would wrongly offer to delete that earlier location from this
+      // blank "New Location" form.
+      unset($_SESSION['loc_edt_bid']);
+
       $title = ts('New Location');
 
       CRM_Utils_System::setTitle($title);
@@ -114,6 +121,68 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
     }
   }
 
+  /**
+   * The "Delete" button is added as a `type => 'cancel'` button (see
+   * buildQuickForm()) specifically so it routes here instead of through
+   * the normal validate()+postProcess() flow - deleting a location
+   * shouldn't be blocked by unrelated required-field validation on the
+   * address/email/phone blocks, and QuickForm's Cancel action already
+   * skips validation for us. This form has no other use for a Cancel
+   * button (see buildQuickForm()), so any click of this type unambiguously
+   * means "delete".
+   */
+  public function cancelAction() {
+    // The form posts back without 'bid' in its submitted params (same
+    // reason postProcess() below reads it from here rather than the
+    // request too) - $_SESSION['loc_edt_bid'] is set in preProcess()
+    // whenever this form was reached with a bid on the URL.
+    $bid = $_SESSION['loc_edt_bid'] ?? NULL;
+    if ($bid) {
+      $this->deleteLocation($bid);
+    }
+  }
+
+  /**
+   * Delete this location's LocBlock and its Address/Email/Phone records,
+   * then redirect back to the Manage Event Locations listing.
+   *
+   * Does not check whether any Event still references this LocBlock - it
+   * didn't before either, when this same deletion was reachable as a
+   * SearchKit row action on the Manage Event Locations listing.
+   */
+  protected function deleteLocation(int $bid): void {
+    if (!CRM_Core_Permission::check('edit locations')) {
+      throw new CRM_Core_Exception(ts('You do not have permission to delete this location.'));
+    }
+
+    $locBlock = (array) LocBlock::get(FALSE)
+      ->addWhere('id', '=', $bid)
+      ->execute()
+      ->single();
+
+    $fieldsByEntity = [
+      Address::class => ['address_id'],
+      Email::class => ['email_id', 'email_2_id'],
+      Phone::class => ['phone_id', 'phone_2_id'],
+    ];
+
+    foreach ($fieldsByEntity as $apiClass => $fields) {
+      $ids = array_values(array_filter(array_map(fn($field) => $locBlock[$field] ?? NULL, $fields)));
+      if ($ids) {
+        $apiClass::delete(FALSE)
+          ->addWhere('id', 'IN', $ids)
+          ->execute();
+      }
+    }
+
+    LocBlock::delete(FALSE)
+      ->addWhere('id', '=', $bid)
+      ->execute();
+
+    CRM_Core_Session::setStatus(ts('Location has been deleted.'), ts('Deleted'), 'success');
+    CRM_Utils_System::redirect(CRM_Utils_System::url('civicrm/manage-event-locations', 'reset=1'));
+  }
+
   public function setDefaultValues() {
     $defaults = $this->_values;
 
@@ -182,11 +251,26 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
             'name' => ts('Save'),
             'isDefault' => TRUE,
           ),
-          array(
-            'type' => 'cancel',
-            'name' => ts('Cancel'),
-          ),
         );
+
+        // Only an existing location (bid on the URL) can be deleted - a
+        // "New Location" form has nothing to delete yet. Read from
+        // $_SESSION rather than the request, matching cancelAction() and
+        // postProcess() below - both need it to survive this form's own
+        // POST-back, where the submitted params don't include 'bid'.
+        if (!empty($_SESSION['loc_edt_bid'])) {
+          $buttons[] = array(
+            // 'cancel' routes button clicks to cancelAction() instead of
+            // postProcess() (see cancelAction() for why that's exactly
+            // what we want here).
+            'type' => 'cancel',
+            'name' => ts('Delete'),
+            'icon' => 'fa-trash',
+            'js' => array(
+              'onclick' => "return confirm(" . json_encode(ts('Are you sure you want to delete this location? This cannot be undone.')) . ");",
+            ),
+          );
+        }
 
         //$this->assign('message', 'Permission of editting enabled');
         $this->addButtons($buttons);

@@ -7,56 +7,13 @@ import testData from '../fixtures/test-data.json';
  *
  * Grounded against managed/SavedSearch_ManageEventLocations.mgd.php and
  * ang/afsearchManageEventLocations.aff.html: the table's row-actions column
- * has no header text and renders its three links inline (no `fa-bars`
- * menu trigger to open first) - "Edit Location" (plain navigation to
- * civicrm/EditLocation?bid=[id]),
- * "Update Address" and "Delete Address" (both open a `crm-popup` SearchKit
- * task dialog against the joined Address record). The filter fields above
- * the table are afform fields labelled exactly "Address Name", "Street
- * Address", "City", "Country" and "State/Province".
+ * has no header text and renders a single link inline (no `fa-bars` menu
+ * trigger to open first) - "Edit Location" (plain navigation to
+ * civicrm/EditLocation?bid=[id]). Deleting a location is done from that
+ * form itself (see edit-location-form.spec.ts), not from this listing. The
+ * filter fields above the table are afform fields labelled exactly "Address
+ * Name", "Street Address", "City", "Country" and "State/Province".
  */
-
-async function getDefaultLocationTypeId(): Promise<number> {
-  const types = civiApi4<Array<{ id: number }>>('LocationType.get', {
-    where: [['is_default', '=', true]],
-    select: ['id'],
-  });
-  return types[0]?.id ?? 1;
-}
-
-async function createThrowawayLocation(name: string, streetAddress: string, city = 'Perth') {
-  const locationTypeId = await getDefaultLocationTypeId();
-
-  const address = civiApi4Single<{ id: number }>('Address.create', {
-    values: {
-      name,
-      street_address: streetAddress,
-      city,
-      location_type_id: locationTypeId,
-    },
-  });
-  const email = civiApi4Single<{ id: number }>('Email.create', {
-    values: {
-      email: `${name.toLowerCase().replace(/[^a-z0-9]+/g, '')}@example.test`,
-      location_type_id: locationTypeId,
-    },
-  });
-  const phone = civiApi4Single<{ id: number }>('Phone.create', {
-    values: {
-      phone: '0311122244',
-      location_type_id: locationTypeId,
-    },
-  });
-  const locBlock = civiApi4Single<{ id: number }>('LocBlock.create', {
-    values: {
-      address_id: address.id,
-      email_id: email.id,
-      phone_id: phone.id,
-    },
-  });
-
-  return { locBlockId: locBlock.id, addressId: address.id, emailId: email.id, phoneId: phone.id };
-}
 
 test.describe('Manage Event Locations listing', () => {
   test('lists every location that has an address on file, whether or not an Event currently uses it', async ({ privilegedPage }) => {
@@ -121,74 +78,6 @@ test.describe('Manage Event Locations listing', () => {
 
       await nonPrivilegedPage.goto(editLocationUrl(locBlockId));
       await expect(nonPrivilegedPage.getByRole('button', { name: 'Save' })).toHaveCount(0);
-    });
-  });
-
-  test.describe.serial('Update Address / Delete Address row actions', () => {
-    // A throwaway LocBlock created solely for this destructive suite -
-    // Locations A/B/C must never be targeted by Update/Delete here.
-    let throwaway: { locBlockId: number; addressId: number };
-    const name = `EML Throwaway Row Actions ${Date.now()}`;
-    const originalStreetAddress = '50 Throwaway Street';
-    const updatedCity = 'Darwin';
-
-    test.beforeAll(async () => {
-      throwaway = await createThrowawayLocation(name, originalStreetAddress);
-    });
-
-    test('Update Address row action edits the underlying Address record', async ({ privilegedPage }) => {
-      await privilegedPage.goto(MANAGE_EVENT_LOCATIONS_URL);
-      await privilegedPage.waitForLoadState('networkidle');
-
-      const row = privilegedPage.locator('tr', { hasText: name });
-      await expect(row).toBeVisible();
-      await row.getByRole('link', { name: 'Update Address' }).click();
-
-      // This is SearchKit's generic bulk "Update Locations" task dialog, not
-      // a plain address-edit form - fields must be added one at a time via
-      // its "Add Value" picker before an input for them appears.
-      const dialog = privilegedPage.getByRole('dialog');
-      await expect(dialog).toBeVisible();
-
-      // The "Add Value" picker is a crm-select2 (Select2.js v3) widget -
-      // getByLabel resolves to its offscreen focus-trap input, not a real
-      // <select>, and the actual <select> it hides isn't necessarily wired
-      // to fire Angular's own change-detection on a raw value change. Open
-      // it and click the option directly, the same way a real user would.
-      await dialog.locator('.select2-container').first().click();
-      await privilegedPage.locator('.select2-drop .select2-results li', { hasText: 'City' }).first().click();
-
-      const cityInput = dialog.locator('input[name*="city" i]').first();
-      await cityInput.fill(updatedCity);
-      await dialog.getByRole('button', { name: 'Update Location' }).click();
-      await privilegedPage.waitForLoadState('networkidle');
-
-      const address = civiApi4Single<{ city: string }>('Address.get', {
-        where: [['id', '=', throwaway.addressId]],
-        select: ['city'],
-      });
-      expect(address.city).toBe(updatedCity);
-    });
-
-    test('Delete Address row action removes the underlying Address record', async ({ privilegedPage }) => {
-      await privilegedPage.goto(MANAGE_EVENT_LOCATIONS_URL);
-      await privilegedPage.waitForLoadState('networkidle');
-
-      const row = privilegedPage.locator('tr', { hasText: name });
-      await expect(row).toBeVisible();
-      await row.getByRole('link', { name: 'Delete Address' }).click();
-
-      // Confirm the delete inside the popup dialog (style: danger).
-      const dialog = privilegedPage.locator('.crm-container .ui-dialog, .crm-popup').last();
-      await expect(dialog).toBeVisible();
-      await dialog.getByRole('button', { name: /delete|yes|ok/i }).first().click();
-      await privilegedPage.waitForLoadState('networkidle');
-
-      const remaining = civiApi4<Array<{ id: number }>>('Address.get', {
-        where: [['id', '=', throwaway.addressId]],
-        select: ['id'],
-      });
-      expect(remaining).toHaveLength(0);
     });
   });
 
