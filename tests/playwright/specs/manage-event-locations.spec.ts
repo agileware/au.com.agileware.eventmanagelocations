@@ -144,14 +144,21 @@ test.describe('Manage Event Locations listing', () => {
       await expect(row).toBeVisible();
       await row.getByRole('link', { name: 'Update Address' }).click();
 
-      // SearchKit renders this as a crm-popup dialog with the Address's own
-      // fields - best-effort on the exact dialog markup.
-      const dialog = privilegedPage.locator('.crm-container .ui-dialog, .crm-popup').last();
+      // This is SearchKit's generic bulk "Update Locations" task dialog, not
+      // a plain address-edit form - fields must be added one at a time via
+      // its "Add Value" picker before an input for them appears.
+      const dialog = privilegedPage.getByRole('dialog');
       await expect(dialog).toBeVisible();
 
-      const cityInput = dialog.locator('input[name="city"], input[name*="[city]"]').first();
+      let addValueField = dialog.getByLabel('Add Value', { exact: true });
+      if (!(await addValueField.count())) {
+        addValueField = dialog.locator('select').first();
+      }
+      await addValueField.selectOption({ label: 'City' });
+
+      const cityInput = dialog.locator('input[name*="city" i]').first();
       await cityInput.fill(updatedCity);
-      await dialog.getByRole('button', { name: /save|update/i }).click();
+      await dialog.getByRole('button', { name: 'Update Location' }).click();
       await privilegedPage.waitForLoadState('networkidle');
 
       const address = civiApi4Single<{ city: string }>('Address.get', {
