@@ -46,11 +46,17 @@ echo "Creating WP roles..."
 # screens. This extension's own "edit locations" permission is a separate,
 # narrower gate within the Location tab (Create new location / the Edit
 # Location form), which only the privileged role gets.
+#
+# CRM_Core_Permission_WordPress::check() lowercases the permission string
+# and replaces every run of non-alphanumeric characters with a single
+# underscore (CRM_Utils_String::munge) before calling current_user_can() -
+# so the WP capability granted here must be the munged form, not the
+# display name, or the check always misses.
 run wp role create "$PRIV_ROLE" "EML Privileged (test)" --clone=subscriber >/dev/null 2>&1 || true
-run wp cap add "$PRIV_ROLE" "access CiviCRM" "access CiviEvent" "view event info" "edit all events" "edit locations"
+run wp cap add "$PRIV_ROLE" "access_civicrm" "access_civievent" "view_event_info" "edit_all_events" "edit_locations"
 
 run wp role create "$NONPRIV_ROLE" "EML Non-Privileged (test)" --clone=subscriber >/dev/null 2>&1 || true
-run wp cap add "$NONPRIV_ROLE" "access CiviCRM" "access CiviEvent" "view event info" "edit all events"
+run wp cap add "$NONPRIV_ROLE" "access_civicrm" "access_civievent" "view_event_info" "edit_all_events"
 
 echo "Creating WP users..."
 if run wp user get "$PRIV_USERNAME" >/dev/null 2>&1; then
