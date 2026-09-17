@@ -156,14 +156,21 @@ test.describe('Manage Event Locations listing', () => {
       // to fire Angular's own change-detection on a raw value change. Open
       // it, then type + Enter to pick a result rather than clicking a
       // specific result li directly, which is flaky against select2's own
-      // open/reposition animation. Its choices are whole blocks ("Address",
-      // "Email", "Phone", ...), not individual fields - picking "Address"
-      // reveals the full set of address fields (including City) to edit.
-      await dialog.locator('.select2-container').first().click();
-      await expect(privilegedPage.locator('.select2-drop-active')).toBeVisible();
-      await privilegedPage.keyboard.type('Address');
-      await expect(privilegedPage.locator('.select2-results .select2-highlighted')).toBeVisible();
-      await privilegedPage.keyboard.press('Enter');
+      // open/reposition animation.
+      async function pickSelect2Value(picker: import('@playwright/test').Locator, text: string) {
+        await picker.click();
+        await expect(privilegedPage.locator('.select2-drop-active')).toBeVisible();
+        await privilegedPage.keyboard.type(text);
+        await expect(privilegedPage.locator('.select2-results .select2-highlighted')).toBeVisible();
+        await privilegedPage.keyboard.press('Enter');
+      }
+
+      // Choices here are whole blocks ("Address", "Email", "Phone", ...),
+      // not individual fields - picking "Address" adds it as a chip and
+      // reveals a second select2 picker (still showing its "Select"
+      // placeholder) to choose which specific field within it to edit.
+      await pickSelect2Value(dialog.locator('.select2-container').first(), 'Address');
+      await pickSelect2Value(dialog.locator('.select2-container', { hasText: 'Select' }).first(), 'City');
 
       const cityInput = dialog.locator('input[name*="city" i]').first();
       await cityInput.fill(updatedCity);
