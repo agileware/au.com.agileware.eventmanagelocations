@@ -7,13 +7,12 @@ import testData from '../fixtures/test-data.json';
  *
  * Grounded against managed/SavedSearch_ManageEventLocations.mgd.php and
  * ang/afsearchManageEventLocations.aff.html: the table's row-actions column
- * has no header text and renders its three links inline (no `fa-bars`
- * menu trigger to open first) - "Edit Location" (plain navigation to
- * civicrm/EditLocation?bid=[id]),
- * "Update Address" and "Delete Address" (both open a `crm-popup` SearchKit
- * task dialog against the joined Address record). The filter fields above
- * the table are afform fields labelled exactly "Address Name", "Street
- * Address", "City", "Country" and "State/Province".
+ * has no header text and renders its two links inline (no `fa-bars` menu
+ * trigger to open first) - "Edit Location" (plain navigation to
+ * civicrm/EditLocation?bid=[id]) and "Delete Address" (opens a `crm-popup`
+ * SearchKit task dialog against the joined Address record). The filter
+ * fields above the table are afform fields labelled exactly "Address
+ * Name", "Street Address", "City", "Country" and "State/Province".
  */
 
 async function getDefaultLocationTypeId(): Promise<number> {
@@ -124,73 +123,15 @@ test.describe('Manage Event Locations listing', () => {
     });
   });
 
-  test.describe.serial('Update Address / Delete Address row actions', () => {
-    // A throwaway LocBlock created solely for this destructive suite -
-    // Locations A/B/C must never be targeted by Update/Delete here.
+  test.describe('Delete Address row action', () => {
+    // A throwaway LocBlock created solely for this destructive test -
+    // Locations A/B/C must never be targeted by Delete here.
     let throwaway: { locBlockId: number; addressId: number };
     const name = `EML Throwaway Row Actions ${Date.now()}`;
     const originalStreetAddress = '50 Throwaway Street';
-    const updatedCity = 'Darwin';
 
     test.beforeAll(async () => {
       throwaway = await createThrowawayLocation(name, originalStreetAddress);
-    });
-
-    test('Update Address row action edits the underlying Address record', async ({ privilegedPage }) => {
-      await privilegedPage.goto(MANAGE_EVENT_LOCATIONS_URL);
-      await privilegedPage.waitForLoadState('networkidle');
-
-      const row = privilegedPage.locator('tr', { hasText: name });
-      await expect(row).toBeVisible();
-      await row.getByRole('link', { name: 'Update Address' }).click();
-
-      // This is SearchKit's generic bulk "Update Locations" task dialog, not
-      // a plain address-edit form - fields must be added one at a time via
-      // its "Add Value" picker before an input for them appears.
-      const dialog = privilegedPage.getByRole('dialog');
-      await expect(dialog).toBeVisible();
-
-      // The "Add Value" picker is a crm-select2 (Select2.js v3) widget -
-      // getByLabel resolves to its offscreen focus-trap input, not a real
-      // <select>, and the actual <select> it hides isn't necessarily wired
-      // to fire Angular's own change-detection on a raw value change. Open
-      // it, then type + Enter to pick a result rather than clicking a
-      // specific result li directly, which is flaky against select2's own
-      // open/reposition animation.
-      async function pickSelect2Value(picker: import('@playwright/test').Locator, text: string) {
-        await picker.click();
-        // .last(): an earlier select2 instance on this same dialog can leave
-        // its own drop element lingering with this same "active" class, so
-        // more than one can match - the one that matters is whichever
-        // opened most recently.
-        await expect(privilegedPage.locator('.select2-drop-active').last()).toBeVisible();
-        // The second picker's own option list (which field within the
-        // chosen block to edit) loads asynchronously once the block is
-        // selected - typing before it's populated searches an empty list,
-        // and select2 doesn't re-apply that search once results do arrive.
-        await expect(privilegedPage.locator('.select2-results li').last()).toBeVisible();
-        await privilegedPage.keyboard.type(text);
-        await expect(privilegedPage.locator('.select2-results .select2-highlighted').last()).toBeVisible();
-        await privilegedPage.keyboard.press('Enter');
-      }
-
-      // Choices here are whole blocks ("Address", "Email", "Phone", ...),
-      // not individual fields - picking "Address" adds it as a chip and
-      // reveals a second select2 picker (still showing its "Select"
-      // placeholder) to choose which specific field within it to edit.
-      await pickSelect2Value(dialog.locator('.select2-container').first(), 'Address');
-      await pickSelect2Value(dialog.locator('.select2-container', { hasText: 'Select' }).first(), 'City');
-
-      const cityInput = dialog.locator('input[name*="city" i]').first();
-      await cityInput.fill(updatedCity);
-      await dialog.getByRole('button', { name: 'Update Location' }).click();
-      await privilegedPage.waitForLoadState('networkidle');
-
-      const address = civiApi4Single<{ city: string }>('Address.get', {
-        where: [['id', '=', throwaway.addressId]],
-        select: ['city'],
-      });
-      expect(address.city).toBe(updatedCity);
     });
 
     test('Delete Address row action removes the underlying Address record', async ({ privilegedPage }) => {
