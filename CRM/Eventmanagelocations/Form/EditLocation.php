@@ -36,15 +36,6 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
       $_SESSION['loc_edt_bid'] = $bid;
 
       $this->assign('loc_edit_title',ts('Edit Location'));
-
-      if (CRM_Utils_Request::retrieve('action', 'String') === 'delete') {
-        // Deletes and redirects away; nothing below this point runs.
-        $this->deleteLocation($bid);
-      }
-
-      if (CRM_Core_Permission::check('edit locations')) {
-        $this->assign('loc_delete_url', CRM_Utils_System::url('civicrm/EditLocation', "bid={$bid}&action=delete", TRUE));
-      }
     }
     else {
       $title = ts('New Location');
@@ -120,6 +111,23 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
         $this->_values[strtolower($tmp[0])][$tmp[1]] = $result;
       }
       $this->set('values', $this->_values);
+    }
+  }
+
+  /**
+   * The "Delete" button is added as a `type => 'cancel'` button (see
+   * buildQuickForm()) specifically so it routes here instead of through
+   * the normal validate()+postProcess() flow - deleting a location
+   * shouldn't be blocked by unrelated required-field validation on the
+   * address/email/phone blocks, and QuickForm's Cancel action already
+   * skips validation for us. This form has no other use for a Cancel
+   * button (see buildQuickForm()), so any click of this type unambiguously
+   * means "delete".
+   */
+  public function cancelAction() {
+    $bid = CRM_Utils_Request::retrieve('bid', 'Int');
+    if ($bid) {
+      $this->deleteLocation($bid);
     }
   }
 
@@ -232,11 +240,23 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
             'name' => ts('Save'),
             'isDefault' => TRUE,
           ),
-          array(
-            'type' => 'cancel',
-            'name' => ts('Cancel'),
-          ),
         );
+
+        // Only an existing location (bid on the URL) can be deleted - a
+        // "New Location" form has nothing to delete yet.
+        if (CRM_Utils_Request::retrieve('bid', 'Int')) {
+          $buttons[] = array(
+            // 'cancel' routes button clicks to cancelAction() instead of
+            // postProcess() (see cancelAction() for why that's exactly
+            // what we want here).
+            'type' => 'cancel',
+            'name' => ts('Delete'),
+            'icon' => 'fa-trash',
+            'js' => array(
+              'onclick' => "return confirm(" . json_encode(ts('Are you sure you want to delete this location? This cannot be undone.')) . ");",
+            ),
+          );
+        }
 
         //$this->assign('message', 'Permission of editting enabled');
         $this->addButtons($buttons);

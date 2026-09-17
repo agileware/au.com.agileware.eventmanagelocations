@@ -115,16 +115,30 @@ test.describe('Non-privileged users see a frozen, read-only form', () => {
     }
   });
 
-  test('no Delete link either', async ({ nonPrivilegedPage }) => {
+  test('no Delete button either', async ({ nonPrivilegedPage }) => {
     const locBlockId = getLocBlockIdByLocationName(testData.locations.a.name);
     await nonPrivilegedPage.goto(editLocationUrl(locBlockId));
 
-    await expect(nonPrivilegedPage.getByRole('link', { name: 'Delete' })).toHaveCount(0);
+    await expect(nonPrivilegedPage.getByRole('button', { name: 'Delete' })).toHaveCount(0);
   });
 });
 
 test.describe('Deleting a location from this form', () => {
-  test('the Delete link removes the LocBlock and its Address/Email/Phone, and returns to the listing', async ({ privilegedPage }) => {
+  test('a new, unattached location has no Delete button - there is nothing to delete yet', async ({ privilegedPage }) => {
+    await privilegedPage.goto(editLocationUrl());
+    await expect(privilegedPage.getByRole('button', { name: 'Delete' })).toHaveCount(0);
+  });
+
+  test('the Delete button appears alongside Save, top and bottom, with no Cancel button', async ({ privilegedPage }) => {
+    const locBlockId = getLocBlockIdByLocationName(testData.locations.a.name);
+    await privilegedPage.goto(editLocationUrl(locBlockId));
+
+    await expect(privilegedPage.getByRole('button', { name: 'Save' })).toHaveCount(2);
+    await expect(privilegedPage.getByRole('button', { name: 'Delete' })).toHaveCount(2);
+    await expect(privilegedPage.getByRole('button', { name: 'Cancel' })).toHaveCount(0);
+  });
+
+  test('the Delete button removes the LocBlock and its Address/Email/Phone, and returns to the listing', async ({ privilegedPage }) => {
     const locationTypeId = civiApi4Single<{ id: number }>('LocationType.get', {
       where: [['is_default', '=', true]],
       select: ['id'],
@@ -145,7 +159,7 @@ test.describe('Deleting a location from this form', () => {
     privilegedPage.on('dialog', (dialog) => dialog.accept());
 
     await privilegedPage.goto(editLocationUrl(locBlock.id));
-    await privilegedPage.getByRole('link', { name: 'Delete' }).click();
+    await privilegedPage.getByRole('button', { name: 'Delete' }).first().click();
     await privilegedPage.waitForLoadState('networkidle');
 
     expect(privilegedPage.url()).toContain('q=civicrm%2Fmanage-event-locations');

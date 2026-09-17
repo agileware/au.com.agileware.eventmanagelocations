@@ -79,9 +79,10 @@ Saving from this form updates the existing Location Block in place rather than c
 Since a Location Block can be shared by multiple Events, this changes the location's address,
 email, and phone details for *every* Event that uses it.
 
-When editing an existing location, a **Delete** link is also shown (to users with the `edit
-locations` permission). It removes the Location Block and its Address, Email, and Phone records
-entirely, after a confirmation prompt, and returns to the **Manage Event Locations** screen.
+When editing an existing location, a **Delete** button is also shown next to **Save** (to users
+with the `edit locations` permission). It removes the Location Block and its Address, Email, and
+Phone records entirely, after a confirmation prompt, and returns to the **Manage Event Locations**
+screen.
 
 ## Permissions
 
