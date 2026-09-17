@@ -136,6 +136,7 @@ test.describe('Deleting a location from this form', () => {
     await expect(privilegedPage.getByRole('button', { name: 'Save' })).toHaveCount(2);
     await expect(privilegedPage.getByRole('button', { name: 'Delete' })).toHaveCount(2);
     await expect(privilegedPage.getByRole('button', { name: 'Cancel' })).toHaveCount(0);
+    await expect(privilegedPage.getByRole('link', { name: 'Back to Manage Event Locations' })).toHaveCount(2);
   });
 
   test('the Delete button removes the LocBlock and its Address/Email/Phone, and returns to the listing', async ({ privilegedPage }) => {
