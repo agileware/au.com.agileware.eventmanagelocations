@@ -154,12 +154,16 @@ test.describe('Manage Event Locations listing', () => {
       // getByLabel resolves to its offscreen focus-trap input, not a real
       // <select>, and the actual <select> it hides isn't necessarily wired
       // to fire Angular's own change-detection on a raw value change. Open
-      // it and click the option directly, the same way a real user would.
-      // Its choices are whole blocks ("Address", "Email", "Phone", ...),
-      // not individual fields - picking "Address" reveals the full set of
-      // address fields (including City) to edit.
+      // it, then type + Enter to pick a result rather than clicking a
+      // specific result li directly, which is flaky against select2's own
+      // open/reposition animation. Its choices are whole blocks ("Address",
+      // "Email", "Phone", ...), not individual fields - picking "Address"
+      // reveals the full set of address fields (including City) to edit.
       await dialog.locator('.select2-container').first().click();
-      await privilegedPage.locator('.select2-drop .select2-results li', { hasText: 'Address' }).first().click();
+      await expect(privilegedPage.locator('.select2-drop-active')).toBeVisible();
+      await privilegedPage.keyboard.type('Address');
+      await expect(privilegedPage.locator('.select2-results .select2-highlighted')).toBeVisible();
+      await privilegedPage.keyboard.press('Enter');
 
       const cityInput = dialog.locator('input[name*="city" i]').first();
       await cityInput.fill(updatedCity);
