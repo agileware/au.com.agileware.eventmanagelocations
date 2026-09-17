@@ -150,11 +150,13 @@ test.describe('Manage Event Locations listing', () => {
       const dialog = privilegedPage.getByRole('dialog');
       await expect(dialog).toBeVisible();
 
-      let addValueField = dialog.getByLabel('Add Value', { exact: true });
-      if (!(await addValueField.count())) {
-        addValueField = dialog.locator('select').first();
-      }
-      await addValueField.selectOption({ label: 'City' });
+      // The "Add Value" picker is a crm-select2 (Select2.js v3) widget -
+      // getByLabel resolves to its offscreen focus-trap input, not a real
+      // <select>, and the actual <select> it hides isn't necessarily wired
+      // to fire Angular's own change-detection on a raw value change. Open
+      // it and click the option directly, the same way a real user would.
+      await dialog.locator('.select2-container').first().click();
+      await privilegedPage.locator('.select2-drop .select2-results li', { hasText: 'City' }).first().click();
 
       const cityInput = dialog.locator('input[name*="city" i]').first();
       await cityInput.fill(updatedCity);

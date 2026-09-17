@@ -1,5 +1,5 @@
 import { test, expect, gotoEventLocationTab } from '../fixtures/base';
-import { civiApi4, civiApi4Single, getEventIdByTitle, getLocBlockIdByLocationName, getAddressByLocBlockId } from '../fixtures/civi';
+import { civiApi4, civiApi4Single, getEventIdByTitle, getLocBlockIdByLocationName, getAddressByLocBlockId, getAddressByLocationName } from '../fixtures/civi';
 import testData from '../fixtures/test-data.json';
 
 /**
@@ -51,10 +51,12 @@ test.describe('Create new location', () => {
     expect(newAddress.street_address).toBe('99 New Street');
     expect(newAddress.city).toBe('Perth');
 
-    // None of the seeded locations were touched by this save.
+    // None of the seeded locations were touched by this save. Looked up by
+    // name in one call rather than id-then-address in two, so this can't
+    // race a concurrently-running test that recreates one of them under a
+    // new id (see getAddressByLocationName()).
     for (const location of Object.values(testData.locations)) {
-      const locBlockId = await getLocBlockIdByLocationName(location.name);
-      const address = await getAddressByLocBlockId<{ street_address: string; city: string }>(locBlockId, ['street_address', 'city']);
+      const address = await getAddressByLocationName<{ street_address: string; city: string }>(location.name, ['street_address', 'city']);
       expect(address.street_address).toBe(location.street_address);
       expect(address.city).toBe(location.city);
     }
