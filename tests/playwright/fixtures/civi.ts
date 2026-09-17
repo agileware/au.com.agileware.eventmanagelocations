@@ -59,6 +59,21 @@ export function getAddressByLocBlockId<T = any>(locBlockId: number, select: stri
   });
 }
 
+/**
+ * Looks up a location's Address directly by its own `name`, in a single
+ * call - unlike getLocBlockIdByLocationName() + getAddressByLocBlockId(),
+ * this can't race a concurrently-running test that recreates the location's
+ * LocBlock/Address under a new id (e.g. by switching an event away from a
+ * shared location - see _eventmanagelocations_restore_locblock_if_deleted())
+ * in the gap between looking up the id and looking up by it.
+ */
+export function getAddressByLocationName<T = any>(name: string, select: string[]): T {
+  return civiApi4Single<T>('Address.get', {
+    where: [['name', '=', name]],
+    select,
+  });
+}
+
 export function getEventIdByTitle(title: string): number {
   const rows = civiApi4<Array<{ id: number }>>('Event.get', {
     where: [['title', '=', title]],

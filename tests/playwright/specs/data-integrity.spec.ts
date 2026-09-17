@@ -118,28 +118,24 @@ test.describe('Data integrity - pool persistence', () => {
   test.describe('every seeded location has non-NULL location_type_id on all its components', () => {
     for (const location of Object.values(testData.locations)) {
       test(`Location "${location.name}"`, async () => {
-        const locBlock = await civiApi4Single<{ address_id: number; email_id: number; phone_id: number }>('LocBlock.get', {
+        // A single call with dot-notation joins, rather than the LocBlock
+        // lookup followed by three separate Address/Email/Phone lookups by
+        // id - those ids can go stale between calls if a concurrently
+        // running test recreates this location's LocBlock in the meantime
+        // (e.g. by switching an event away from it - see
+        // _eventmanagelocations_restore_locblock_if_deleted()).
+        const locBlock = await civiApi4Single<{
+          'address_id.location_type_id': number | null;
+          'email_id.location_type_id': number | null;
+          'phone_id.location_type_id': number | null;
+        }>('LocBlock.get', {
           where: [['address_id.name', '=', location.name]],
-          select: ['address_id', 'email_id', 'phone_id'],
+          select: ['address_id.location_type_id', 'email_id.location_type_id', 'phone_id.location_type_id'],
         });
 
-        const address = await civiApi4Single<{ location_type_id: number | null }>('Address.get', {
-          where: [['id', '=', locBlock.address_id]],
-          select: ['location_type_id'],
-        });
-        expect(address.location_type_id).not.toBeNull();
-
-        const email = await civiApi4Single<{ location_type_id: number | null }>('Email.get', {
-          where: [['id', '=', locBlock.email_id]],
-          select: ['location_type_id'],
-        });
-        expect(email.location_type_id).not.toBeNull();
-
-        const phone = await civiApi4Single<{ location_type_id: number | null }>('Phone.get', {
-          where: [['id', '=', locBlock.phone_id]],
-          select: ['location_type_id'],
-        });
-        expect(phone.location_type_id).not.toBeNull();
+        expect(locBlock['address_id.location_type_id']).not.toBeNull();
+        expect(locBlock['email_id.location_type_id']).not.toBeNull();
+        expect(locBlock['phone_id.location_type_id']).not.toBeNull();
       });
     }
   });
