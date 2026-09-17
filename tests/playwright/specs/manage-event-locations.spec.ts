@@ -164,6 +164,11 @@ test.describe('Manage Event Locations listing', () => {
         // more than one can match - the one that matters is whichever
         // opened most recently.
         await expect(privilegedPage.locator('.select2-drop-active').last()).toBeVisible();
+        // The second picker's own option list (which field within the
+        // chosen block to edit) loads asynchronously once the block is
+        // selected - typing before it's populated searches an empty list,
+        // and select2 doesn't re-apply that search once results do arrive.
+        await expect(privilegedPage.locator('.select2-results li').last()).toBeVisible();
         await privilegedPage.keyboard.type(text);
         await expect(privilegedPage.locator('.select2-results .select2-highlighted').last()).toBeVisible();
         await privilegedPage.keyboard.press('Enter');
