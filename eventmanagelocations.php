@@ -9,6 +9,50 @@ require_once 'eventmanagelocations.civix.php';
  */
 function eventmanagelocations_civicrm_config(&$config) {
   _eventmanagelocations_civix_civicrm_config($config);
+
+  // A classic hook_civicrm_pre($op, $objectName, ...) function is NOT early
+  // enough to stop core's own cascade-delete of an Event's LocBlock:
+  // Civi\Core\Container wires up an alias listener on the plain
+  // 'hook_civicrm_pre' event, at priority 100, that immediately re-dispatches
+  // to the entity-targeted 'hook_civicrm_pre::Event' event - which is what
+  // actually invokes CRM_Event_BAO_Event::self_hook_civicrm_pre (core's own
+  // cleanup, including deleteEventLocBlock()). Extension-defined
+  // hook_civicrm_pre() implementations are only invoked afterwards, via a
+  // second listener on the plain event registered at priority -100 - always
+  // after, by design, not merely by chance. To run before core's own
+  // cleanup, we must listen on that same entity-targeted event ourselves,
+  // at a higher priority than the self-hook's default of 0.
+  Civi::dispatcher()->addListener(
+    'hook_civicrm_pre::Event',
+    '_eventmanagelocations_detach_locblock_before_delete',
+    100
+  );
+}
+
+/**
+ * Detach an Event's loc_block_id before CRM_Event_BAO_Event's own
+ * self_hook_civicrm_pre cleanup runs (see eventmanagelocations_civicrm_config()
+ * for why this can't be done from a plain hook_civicrm_pre() implementation).
+ *
+ * Core's own Event delete cleanup removes a LocBlock that's only used by
+ * the Event being deleted, on the same "exclusively-used LocBlock is that
+ * Event's private, disposable data" assumption already worked around in
+ * eventmanagelocations_civicrm_buildForm() - which no longer holds now that
+ * every location (reused or not) is part of a shared, persistent pool only
+ * removed via explicit user action (e.g. "Delete Address" on the Manage
+ * Event Locations screen). Detaching the reference before core's delete
+ * logic runs means it has nothing to clean up, leaving the LocBlock itself
+ * (and its Address/Email/Phone) completely untouched - simpler and stronger
+ * than a snapshot/restore, which would still lose the original LocBlock's
+ * id.
+ */
+function _eventmanagelocations_detach_locblock_before_delete(\Civi\Core\Event\PreEvent $event) {
+  if ($event->action === 'delete' && $event->id) {
+    \Civi\Api4\Event::update(FALSE)
+      ->addWhere('id', '=', $event->id)
+      ->addValue('loc_block_id', NULL)
+      ->execute();
+  }
 }
 
 /**
@@ -70,32 +114,6 @@ function eventmanagelocations_civicrm_permission(&$permissions) {
     'label' => ts('Event manage locations: edit locations'),
     'description' => ts('Allows users to edit event locations'),
   ];
-}
-
-/**
- * Implements hook_civicrm_pre().
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_pre
- *
- * Core's own Event delete cleanup removes a LocBlock that's only used by
- * the Event being deleted, on the same "exclusively-used LocBlock is that
- * Event's private, disposable data" assumption already worked around in
- * eventmanagelocations_civicrm_buildForm() - which no longer holds now that
- * every location (reused or not) is part of a shared, persistent pool only
- * removed via explicit user action (e.g. "Delete Address" on the Manage
- * Event Locations screen). Detaching the reference before core's delete
- * logic runs means it has nothing to clean up, leaving the LocBlock itself
- * (and its Address/Email/Phone) completely untouched - simpler and stronger
- * than a snapshot/restore, which would still lose the original LocBlock's
- * id.
- */
-function eventmanagelocations_civicrm_pre($op, $objectName, $objectId, &$params) {
-  if ($op === 'delete' && $objectName === 'Event') {
-    \Civi\Api4\Event::update(FALSE)
-      ->addWhere('id', '=', $objectId)
-      ->addValue('loc_block_id', NULL)
-      ->execute();
-  }
 }
 
 /**
