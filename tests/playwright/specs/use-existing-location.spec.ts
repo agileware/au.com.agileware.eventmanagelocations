@@ -16,7 +16,7 @@ test.describe('Use existing location', () => {
     const locBlockId = await getLocBlockIdByLocationName(testData.locations.b.name);
     await gotoEventLocationTab(page, eventId);
 
-    await page.locator('#loc_event_id').selectOption(String(locBlockId));
+    await page.locator('#loc_event_id').selectOption(String(locBlockId), { force: true });
     await page.waitForLoadState('networkidle');
 
     await expect(page.getByText(testData.locations.b.street_address)).toBeVisible();
@@ -48,12 +48,12 @@ test.describe('Use existing location', () => {
     const locBlockId = await getLocBlockIdByLocationName(testData.locations.b.name);
 
     await gotoEventLocationTab(privilegedPage, eventId);
-    await privilegedPage.locator('#loc_event_id').selectOption(String(locBlockId));
+    await privilegedPage.locator('#loc_event_id').selectOption(String(locBlockId), { force: true });
     await privilegedPage.waitForLoadState('networkidle');
     await expect(privilegedPage.getByText(/Edit Location link/i)).toBeVisible();
 
     await gotoEventLocationTab(nonPrivilegedPage, eventId);
-    await nonPrivilegedPage.locator('#loc_event_id').selectOption(String(locBlockId));
+    await nonPrivilegedPage.locator('#loc_event_id').selectOption(String(locBlockId), { force: true });
     await nonPrivilegedPage.waitForLoadState('networkidle');
     await expect(nonPrivilegedPage.getByText(/Edit Location link/i)).toHaveCount(0);
   });
@@ -65,9 +65,9 @@ test.describe('Use existing location', () => {
     const before = await getAddressByLocBlockId<{ street_address: string; city: string }>(locBlockId, ['street_address', 'city']);
 
     await gotoEventLocationTab(privilegedPage, eventId);
-    await privilegedPage.locator('#loc_event_id').selectOption(String(locBlockId));
+    await privilegedPage.locator('#loc_event_id').selectOption(String(locBlockId), { force: true });
     await privilegedPage.waitForLoadState('networkidle');
-    await privilegedPage.getByRole('button', { name: 'Save' }).click();
+    await privilegedPage.getByRole('button', { name: 'Save' }).first().click();
     await privilegedPage.waitForLoadState('networkidle');
 
     const event = await civiApi4Single<{ loc_block_id: number }>('Event.get', {

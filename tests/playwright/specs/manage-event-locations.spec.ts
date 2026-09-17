@@ -190,7 +190,10 @@ test.describe('Manage Event Locations listing', () => {
     await privilegedPage.getByRole('link', { name: 'Create a New Location' }).click();
     await privilegedPage.waitForLoadState('networkidle');
 
-    expect(privilegedPage.url()).toContain('/civicrm/EditLocation');
+    // Admin-context CiviCRM pages are routed through wp-admin's URL-encoded
+    // q= param (see civiAdminUrl() in fixtures/base.ts), not the plain
+    // /civicrm/... path - that's only for genuinely public pages.
+    expect(privilegedPage.url()).toContain('q=civicrm%2FEditLocation');
     expect(privilegedPage.url()).not.toMatch(/bid=\d/);
 
     await expect(privilegedPage.locator('input[name="address[1][street_address]"]')).toHaveValue('');
@@ -202,7 +205,7 @@ test.describe('Manage Event Locations listing', () => {
     await privilegedPage.goto(editLocationUrl());
     await privilegedPage.locator('input[name="address[1][street_address]"]').fill(streetAddress);
     await privilegedPage.locator('input[name="address[1][city]"]').fill('Hobart');
-    await privilegedPage.getByRole('button', { name: 'Save' }).click();
+    await privilegedPage.getByRole('button', { name: 'Save' }).first().click();
     await privilegedPage.waitForLoadState('networkidle');
 
     await privilegedPage.goto(MANAGE_EVENT_LOCATIONS_URL);

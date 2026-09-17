@@ -25,7 +25,11 @@ test.describe('Permission-gated visibility', () => {
     // Only one choice is available - forced via a hidden field, not a radio.
     await expect(nonPrivilegedPage.locator('input[type="radio"][name="location_option"]')).toHaveCount(0);
     await expect(nonPrivilegedPage.getByText('Create new location')).toHaveCount(0);
-    await expect(nonPrivilegedPage.locator('#loc_event_id')).toBeVisible();
+    // Not toBeVisible(): CiviCRM's crm-select2 (Select2.js) hides this raw
+    // <select> and renders a separate styled widget in its place - the
+    // element is legitimately hidden by design once that JS runs, on a
+    // working page just as much as a broken one.
+    await expect(nonPrivilegedPage.locator('#loc_event_id')).toBeAttached();
   });
 
   test('non-privileged user cannot reach an editable EditLocation form, and a crafted POST changes nothing', async ({ nonPrivilegedPage }) => {

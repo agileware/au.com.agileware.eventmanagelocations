@@ -38,7 +38,7 @@ test.describe('Create new location', () => {
 
     await privilegedPage.locator('input[name="address[1][street_address]"]').fill('99 New Street');
     await privilegedPage.locator('input[name="address[1][city]"]').fill('Perth');
-    await privilegedPage.getByRole('button', { name: 'Save' }).click();
+    await privilegedPage.getByRole('button', { name: 'Save' }).first().click();
     await privilegedPage.waitForLoadState('networkidle');
 
     const event = await civiApi4Single<{ loc_block_id: number }>('Event.get', {
@@ -111,7 +111,7 @@ test.describe('Create new location - regression: switching away from an existing
       await phoneInput.fill('0399999999');
     }
 
-    await privilegedPage.getByRole('button', { name: 'Save' }).click();
+    await privilegedPage.getByRole('button', { name: 'Save' }).first().click();
     await privilegedPage.waitForLoadState('networkidle');
 
     // Location A must still exist, completely unchanged - this is the
