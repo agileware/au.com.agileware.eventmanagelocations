@@ -14,6 +14,9 @@ safely shared between Events:
   (which does update it in place, deliberately, for every Event that shares it).
 * A **Manage Event Locations** search screen lists that same full pool of locations, so an
   administrator can review, edit, or pre-create locations independently of any Event.
+* From that screen, an **Events using this location** link (shown only when at least one Event
+  uses that location) opens an **Events Using This Location** screen listing exactly those Events,
+  with a bulk action to re-assign some or all of them to a different Location in one go.
 
 The extension is licensed under [AGPL-3.0](LICENSE.txt).
 
@@ -62,6 +65,27 @@ Editing an address here (or via **Edit Location**) updates it everywhere it's us
 Event a new, independent location instead, use **Create a New Location** (also available from this
 screen) or the Event's own Location tab.
 
+### Events Using This Location
+
+Each row in **Manage Event Locations** that has at least one Event attached shows an **Events
+using this location** link (rows for locations with no Events attached show no link at all). It
+opens:
+
+```
+civicrm/manage-event-locations/events
+```
+
+filtered to that one location, listing every Event currently attached to it - Event Title (linking
+to that Event's own settings page), Event Start Date, and Is Active, sorted with the most
+recently-starting Event at the top. A **Back to Manage Event Locations** button returns to the
+listing.
+
+Selecting some or all of the listed Events and choosing **Action > Update Events** opens
+SearchKit's standard bulk-update dialog. Adding the **Location Block** field there and picking a
+different Location re-assigns all the selected Events to it in one operation - the same
+underlying change as editing each Event's own Location tab individually, just applied to many
+Events at once.
+
 ### The Edit Location form
 
 Both the **Manage Event Locations** screen and the "Edit Location" link on an Event's Location tab
@@ -98,8 +122,12 @@ Users must be granted this permission (**Administer > Users and Permissions > Pe
 * Save changes on the `civicrm/EditLocation` form; without it, the form's fields are displayed
   read-only (frozen).
 
-Access to the Event Location tab itself, and to the **Manage Event Locations** search screen,
-only requires the standard **access CiviEvent** and **access CiviCRM** permissions.
+Access to the Event Location tab itself, and to the **Manage Event Locations** and **Events Using
+This Location** search screens, only requires the standard **access CiviEvent** and **access
+CiviCRM** permissions. Whether a given user can actually use the **Update Events** bulk
+re-assignment action, though, is gated by CiviCRM's own Event permissions (e.g. **edit all
+events**) rather than anything this extension declares - a user without edit access to Events
+simply won't see that action offered.
 
 ## Special configuration requirements
 

@@ -73,4 +73,4 @@ that need to freely create/modify/delete data create their own throwaway records
   the suite.
 - `specs/*.spec.ts` - one file per test-plan suite (permissions, use-existing-location,
   create-new-location, switching-locations, data-integrity, public-event-info,
-  manage-event-locations, edit-location-form).
+  manage-event-locations, edit-location-form, events-using-location).

@@ -120,3 +120,21 @@ export function editLocationUrl(bid?: number) {
 }
 
 export const MANAGE_EVENT_LOCATIONS_URL = civiAdminUrl('civicrm/manage-event-locations', { reset: 1 });
+
+/**
+ * Builds the URL for the "Events Using This Location" SearchKit screen,
+ * pre-filtered to a single LocBlock.
+ *
+ * This is an Afform search page (ang/afsearchEventsUsingLocation.aff.html),
+ * whose `<crm-search-display-table ... filters="{loc_block_id:
+ * routeParams.loc_block_id}">` reads `loc_block_id` from Angular's own
+ * `$location.search()` (see afCore.js) - which parses the URL's *hash*
+ * fragment, not its real query string. A plain `?loc_block_id=ID` on the
+ * outer wp-admin URL (parsed by civiAdminUrl()) is invisible to Angular and
+ * silently filters nothing, so the id must be appended after `#/?` instead -
+ * the same convention CiviCRM core itself uses for this exact pattern (e.g.
+ * `civicrm/admin/price/field/option#/?fid=[id]`).
+ */
+export function eventsUsingLocationUrl(locBlockId: number) {
+  return `${civiAdminUrl('civicrm/manage-event-locations/events', { reset: 1 })}#/?loc_block_id=${locBlockId}`;
+}
