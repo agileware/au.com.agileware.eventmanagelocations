@@ -10,7 +10,7 @@
   </maintainer>
   <urls>
     <url desc="Main Extension Page">https://github.com/agileware/au.com.agileware.eventmanagelocations</url>
-    <url desc="Documentation"/>
+    <url desc="Documentation">https://github.com/agileware/au.com.agileware.eventmanagelocations/blob/master/docs/README.md</url>
     <url desc="Support">https://agileware.com.au/contact</url>
     <url desc="Licensing">http://www.gnu.org/licenses/agpl-3.0.html</url>
   </urls>

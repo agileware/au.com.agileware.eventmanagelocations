@@ -18,7 +18,7 @@ safely shared between Events:
   uses that location) opens an **Events Using This Location** screen listing exactly those Events,
   with a bulk action to re-assign some or all of them to a different Location in one go.
 
-The extension is licensed under [AGPL-3.0](LICENSE.txt).
+The extension is licensed under [AGPL-3.0](../LICENSE.txt).
 
 ## Usage
 
@@ -147,8 +147,8 @@ Guide](https://docs.civicrm.org/sysadmin/en/latest/customize/extensions/).
 ## Testing
 
 Automated front-end (Playwright) tests covering the behaviour described above live in
-[tests/playwright](tests/playwright/README.md) and run in CI on every push/PR via
-[.github/workflows/frontend-tests.yml](.github/workflows/frontend-tests.yml).
+[tests/playwright](../tests/playwright/README.md) and run in CI on every push/PR via
+[.github/workflows/frontend-tests.yml](../.github/workflows/frontend-tests.yml).
 
 # About the Authors
 
