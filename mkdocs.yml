@@ -1,0 +1,26 @@
+site_name: Event manage locations for CiviCRM
+repo_url: https://github.com/agileware/au.com.agileware.eventmanagelocations
+site_description: 'A guide for the Event manage locations CiviCRM extension.'
+site_author: 'agileware'
+theme:
+  name: material
+
+nav:
+  - 'Introduction': README.md
+
+markdown_extensions:
+  - attr_list
+  - admonition
+  - def_list
+  - codehilite
+  - toc:
+      permalink: True
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.tilde
+  - pymdownx.betterem
+  - pymdownx.mark
+
+plugins:
+  - search:
+      lang: en
