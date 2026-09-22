@@ -18,7 +18,7 @@ safely shared between Events:
   uses that location) opens an **Events Using This Location** screen listing exactly those Events,
   with a bulk action to re-assign some or all of them to a different Location in one go.
 
-The extension is licensed under [AGPL-3.0](../LICENSE.txt).
+The extension is licensed under [AGPL-3.0](https://github.com/agileware/au.com.agileware.eventmanagelocations/blob/master/LICENSE.txt).
 
 ## Usage
 
@@ -147,8 +147,9 @@ Guide](https://docs.civicrm.org/sysadmin/en/latest/customize/extensions/).
 ## Testing
 
 Automated front-end (Playwright) tests covering the behaviour described above live in
-[tests/playwright](../tests/playwright/README.md) and run in CI on every push/PR via
-[.github/workflows/frontend-tests.yml](../.github/workflows/frontend-tests.yml).
+[tests/playwright](https://github.com/agileware/au.com.agileware.eventmanagelocations/blob/master/tests/playwright/README.md)
+and run in CI on every push/PR via
+[.github/workflows/frontend-tests.yml](https://github.com/agileware/au.com.agileware.eventmanagelocations/blob/master/.github/workflows/frontend-tests.yml).
 
 # About the Authors
 
@@ -166,4 +167,4 @@ This CiviCRM extension was developed by the team at [Agileware](https://agilewar
 Support your Australian [CiviCRM](https://civicrm.org) developers, [contact Agileware](https://agileware.com.au/contact) today!
 
 
-![Agileware](logo/agileware-logo.png)
+![Agileware](https://github.com/agileware/au.com.agileware.eventmanagelocations/raw/master/docs/logo/agileware-logo.png)
