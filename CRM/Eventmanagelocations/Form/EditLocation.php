@@ -108,10 +108,10 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
           ->single();
 
         if($tmp[0] == 'address') {
-          if (CRM_Utils_Array::value('name', $result, '') == '') {
+          if (($result['name'] ?? '') == '') {
             CRM_Utils_System::setTitle(ts('Edit Location', array()));
           } else {
-            CRM_Utils_System::setTitle(ts('Edit Location - %1', array(1 => CRM_Utils_Array::value('name', $result, ''))));
+            CRM_Utils_System::setTitle(ts('Edit Location - %1', [1 => $result['name'] ?? '']));
           }
         }
 
