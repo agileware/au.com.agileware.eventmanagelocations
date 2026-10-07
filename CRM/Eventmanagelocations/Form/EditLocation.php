@@ -21,16 +21,16 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
     //make sense here since this form isn't part of that workflow. Replace
     //the whole trail with the standard CiviCRM >> <page> pattern.
     CRM_Utils_System::resetBreadCrumb();
-    CRM_Utils_System::appendBreadCrumb(array(
-      array(
+    CRM_Utils_System::appendBreadCrumb([
+      [
         'title' => ts('CiviCRM'),
         'url' => CRM_Utils_System::url('civicrm/dashboard', 'reset=1'),
-      ),
-      array(
+      ],
+      [
         'title' => ts('Manage Event Locations'),
         'url' => CRM_Utils_System::url('civicrm/manage-event-locations', 'reset=1'),
-      ),
-    ));
+      ],
+    ]);
 
     if($bid = CRM_Utils_Request::retrieve('bid', 'Int')) {
       $_SESSION['loc_edt_bid'] = $bid;
@@ -55,11 +55,11 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
     }
 
     if(empty($this->_values) || isset($bid)) {
-      $this->_values = array(
-        'address' => array(),
-        'email' => array(),
-        'phone' => array(),
-      );
+      $this->_values = [
+        'address' => [],
+        'email' => [],
+        'phone' => [],
+      ];
 
       // check_permissions is off deliberately: this LocBlock isn't attached
       // to a contact, and if it's already attached to an Event, APIv4's ACL
@@ -81,7 +81,7 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
         'phone' => Phone::class,
       ];
 
-      $tmp = array();
+      $tmp = [];
 
       foreach ($loc_block as $field => $value) {
         $tmp = explode("_", $field);
@@ -109,7 +109,7 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
 
         if($tmp[0] == 'address') {
           if (($result['name'] ?? '') == '') {
-            CRM_Utils_System::setTitle(ts('Edit Location', array()));
+            CRM_Utils_System::setTitle(ts('Edit Location', []));
           } else {
             CRM_Utils_System::setTitle(ts('Edit Location - %1', [1 => $result['name'] ?? '']));
           }
@@ -232,13 +232,13 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
 
     // Disabled permission check as reserved locations are not implemented.
       if (CRM_Core_Permission::check('edit locations')) {
-        $buttons = array(
-          array(
+        $buttons = [
+          [
             'type' => 'upload',
             'name' => ts('Save'),
             'isDefault' => TRUE,
-          ),
-        );
+          ],
+        ];
 
         // Only an existing location (bid on the URL) can be deleted - a
         // "New Location" form has nothing to delete yet. Read from
@@ -246,17 +246,17 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
         // postProcess() below - both need it to survive this form's own
         // POST-back, where the submitted params don't include 'bid'.
         if (!empty($_SESSION['loc_edt_bid'])) {
-          $buttons[] = array(
+          $buttons[] = [
             // 'cancel' routes button clicks to cancelAction() instead of
             // postProcess() (see cancelAction() for why that's exactly
             // what we want here).
             'type' => 'cancel',
             'name' => ts('Delete'),
             'icon' => 'fa-trash',
-            'js' => array(
+            'js' => [
               'onclick' => "return confirm(" . json_encode(ts('Are you sure you want to delete this location? This cannot be undone.')) . ");",
-            ),
-          );
+            ],
+          ];
         }
 
         //$this->assign('message', 'Permission of editting enabled');
@@ -276,18 +276,18 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
 
     if( !empty($this->_values)) {
       $bid = $_SESSION['loc_edt_bid'];
-      $locBlockUpdates = array();
+      $locBlockUpdates = [];
 
       //iterate over what was actually submitted, not just the blocks that
       //already existed on this location - otherwise adding an email/phone
       //to a location that didn't already have one is silently dropped.
-      foreach (array('address', 'email', 'phone') as $blockName) {
+      foreach (['address', 'email', 'phone'] as $blockName) {
         if (empty($params[$blockName]) || !is_array($params[$blockName])) {
           continue;
         }
 
-        $records = array();
-        $customFieldsByKey = array();
+        $records = [];
+        $customFieldsByKey = [];
 
         foreach ($params[$blockName] as $key => $value) {
           if (!$this->blockInstanceHasData($blockName, $value)) {
@@ -317,7 +317,7 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
         //CiviCRM core's own event location form); address still needs the
         //BAO layer since APIv4 doesn't support this form's custom_XX field
         //format for address custom data.
-        $savedIds = array();
+        $savedIds = [];
         if ($blockName == 'address') {
           foreach ($records as $key => $record) {
             $savedIds[$key] = CRM_Core_BAO_Address::writeRecord($record)->id;
@@ -341,7 +341,7 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
           //CustomValue API addresses a single named custom group at a time,
           //so it doesn't have a matching generic entry point for this.
           if (!empty($customFieldsByKey[$key])) {
-            $query_array = array('entity_id' => $id,'entity_table' => "$blockName",) + $customFieldsByKey[$key];
+            $query_array = ['entity_id' => $id,'entity_table' => "$blockName",] + $customFieldsByKey[$key];
             $result = civicrm_api3('CustomValue', 'create', $query_array);
 
             if( !empty($result['is_error'])) {
@@ -367,7 +367,7 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
     }
     else {
       $defaultLocationType = CRM_Core_BAO_LocationType::getDefault();
-      foreach (array('address','phone','email',) as $block) {
+      foreach (['address','phone','email',] as $block) {
         if (empty($params[$block]) || !is_array($params[$block])) {
           continue;
         }
@@ -382,7 +382,7 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
       // create/update new blocks.
       $location = CRM_Core_BAO_Location::create($params, TRUE, NULL);
 
-      $params_array = array();
+      $params_array = [];
 
       foreach ($location as $blockName => $block) {
         if (empty($block) || !is_array($block) || $blockName == 'openid') {
@@ -446,12 +446,12 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
     return FALSE;
   }
 
-  protected function pop_out_custom_fields(array &$input = array()) {
+  protected function pop_out_custom_fields(array &$input = []) {
     if(empty($input) || gettype($input) != 'array') {
       return false;
     }
 
-    $output = array();
+    $output = [];
     $tmp = null;
 
     foreach ($input as $key => $value) {
