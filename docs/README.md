@@ -137,7 +137,7 @@ immediately available (subject to the permissions described above).
 
 ## Requirements
 
-* CiviCRM 5.51+ (uses APIv4 and SearchKit)
+* CiviCRM 6.3+ (uses APIv4 and SearchKit)
 
 ## Installation (Web UI)
 

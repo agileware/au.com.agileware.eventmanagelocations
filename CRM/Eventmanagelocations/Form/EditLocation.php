@@ -218,27 +218,14 @@ class CRM_Eventmanagelocations_Form_EditLocation extends CRM_Event_Form_ManageEv
     //contact concepts that don't apply to an event's location) and no
     //dynamic "add another" - EditLocation.tpl renders its own minimal
     //markup for email/phone rather than the full, generic
-    //CRM/Contact/Form/Edit/Email|Phone.tpl. Newer CiviCRM versions give the
-    //parent class non-deprecated trait methods for this; use them when
-    //available and fall back to the older, still-functional-but-deprecated
-    //calls on CiviCRM versions that predate them.
+    //CRM/Contact/Form/Edit/Email|Phone.tpl. The email/phone fields come from
+    //the EmailBlockTrait/PhoneBlockTrait methods on the parent class
+    //(CiviCRM 6.3+).
     CRM_Contact_Form_Edit_Address::buildQuickForm($this, 1);
-    if (method_exists($this, 'addEmailBlockNonContactFields')) {
-      $this->addEmailBlockNonContactFields(1);
-      $this->addEmailBlockNonContactFields(2);
-    }
-    else {
-      CRM_Contact_Form_Edit_Email::buildQuickForm($this, 1);
-      CRM_Contact_Form_Edit_Email::buildQuickForm($this, 2);
-    }
-    if (method_exists($this, 'addPhoneBlockFields')) {
-      $this->addPhoneBlockFields(1);
-      $this->addPhoneBlockFields(2);
-    }
-    else {
-      CRM_Contact_Form_Edit_Phone::buildQuickForm($this, 1);
-      CRM_Contact_Form_Edit_Phone::buildQuickForm($this, 2);
-    }
+    $this->addEmailBlockNonContactFields(1);
+    $this->addEmailBlockNonContactFields(2);
+    $this->addPhoneBlockFields(1);
+    $this->addPhoneBlockFields(2);
 
     //fix for CRM-1971
     $this->assign('action', $this->_action);
