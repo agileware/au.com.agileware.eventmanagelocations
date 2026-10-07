@@ -1,7 +1,5 @@
 <?php
 
-require_once 'CRM/Core/Form.php';
-
 use Civi\Api4\Address;
 use Civi\Api4\Email;
 use Civi\Api4\LocBlock;
